@@ -46,7 +46,10 @@ module.exports = async (req, res) => {
   }
 
   // Handle URL normalization: ensure req.url starts with /api for Express router
-  if (!req.url.startsWith('/api')) {
+  const matchedPath = req.headers['x-matched-path'];
+  if (matchedPath && matchedPath.startsWith('/api')) {
+    req.url = matchedPath;
+  } else if (!req.url.startsWith('/api')) {
     req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
   }
 
