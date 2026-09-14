@@ -37,11 +37,18 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'Techloom E-Commerce Engine',
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'healthy',
+    message: 'Techloom API is active',
   });
 });
 
