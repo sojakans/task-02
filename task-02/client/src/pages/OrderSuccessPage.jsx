@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { orderService } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { StatusBadge } from '../components/StatusBadge';
 
 export const OrderSuccessPage = () => {
   const { orderId } = useParams();
@@ -31,7 +30,7 @@ export const OrderSuccessPage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}>
+      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
           progress_activity
         </span>
@@ -42,167 +41,129 @@ export const OrderSuccessPage = () => {
 
   if (error || !order) {
     return (
-      <div className="container" style={{ padding: '5rem 0', textAlign: 'center' }}>
-        <div style={{ maxWidth: '480px', margin: '0 auto', background: 'var(--card)', padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: '440px', margin: '0 auto', background: 'var(--card)', padding: '2rem 1.5rem', borderRadius: 'var(--radius-xl)' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--stock-out)' }}>error</span>
-          <h2 style={{ fontFamily: 'var(--font-headline)', marginTop: '1rem', fontSize: '1.25rem' }}>Order Not Found</h2>
-          <Link to="/orders" className="btn-primary" style={{ marginTop: '1.5rem' }}>View Order History</Link>
+          <h2 style={{ fontFamily: 'var(--font-headline)', marginTop: '0.75rem', fontSize: '1.25rem' }}>Order Not Found</h2>
+          <Link to="/orders" className="btn-primary" style={{ marginTop: '1.5rem', minHeight: '44px' }}>View Order History</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '3rem 0 5rem 0' }}>
-      <div className="container" style={{ maxWidth: '780px' }}>
-        {/* Success Card */}
+    <div style={{ padding: '2rem 1rem 5rem 1rem', minHeight: '75vh', display: 'flex', alignItems: 'center' }}>
+      <div className="container" style={{ maxWidth: '480px', width: '100%' }}>
+        {/* ============================================================
+            REQUIREMENT 10: PROFESSIONAL MOBILE SUCCESS SCREEN
+            Large success icon, "Payment Successful", Order ID, Total Amount,
+            Payment ID, Date, [ View Order ], [ Continue Shopping ].
+            ============================================================ */}
         <div style={{
           background: 'var(--card)',
           borderRadius: 'var(--radius-xl)',
           border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden',
+          boxShadow: 'var(--shadow-md)',
+          padding: '2.5rem 1.5rem',
+          textAlign: 'center',
         }}>
-          {/* Green Hero Header */}
+          {/* Large Success Icon */}
           <div style={{
-            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-            color: '#ffffff',
-            padding: '2.5rem 2rem',
-            textAlign: 'center',
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            background: '#ecfdf5',
+            color: 'var(--stock-in)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '1rem',
+            border: '2px solid #a7f3d0',
+            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)',
           }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: '#ffffff',
-              color: '#059669',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1rem',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '36px', fontWeight: 800 }}>
-                check
-              </span>
-            </div>
-            <h1 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-              Payment Successful & Silicon Allocated!
-            </h1>
-            <p style={{ fontSize: '0.9375rem', opacity: 0.95 }}>
-              Your transaction has been cryptographically settled. Components have been allocated for laboratory dispatch.
-            </p>
+            <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 800 }}>
+              check
+            </span>
           </div>
 
-          {/* Body */}
-          <div style={{ padding: '2rem' }}>
-            {/* Meta Row */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-              gap: '1rem',
-              padding: '1.25rem',
-              background: 'var(--card-subtle)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-hairline)',
-              marginBottom: '2rem',
-            }}>
-              <div>
-                <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Order Identifier
-                </span>
-                <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--slate-dark)', fontFamily: 'monospace' }}>
-                  {order.orderId}
-                </strong>
-              </div>
+          <h1 style={{
+            fontFamily: 'var(--font-headline)',
+            fontSize: '1.625rem',
+            fontWeight: 800,
+            color: 'var(--slate-dark)',
+            marginBottom: '0.375rem',
+          }}>
+            Payment Successful
+          </h1>
 
-              <div>
-                <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Date Authorized
-                </span>
-                <strong style={{ display: 'block', fontSize: '0.875rem', color: 'var(--slate-dark)' }}>
-                  {formatDate(order.createdAt)}
-                </strong>
-              </div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+            Your transaction has been cryptographically confirmed. Silicon inventory is officially allocated.
+          </p>
 
-              <div>
-                <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Order Status
-                </span>
-                <div style={{ marginTop: '0.25rem' }}>
-                  <StatusBadge status={order.status} type="order" />
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Total Settled
-                </span>
-                <strong style={{ display: 'block', fontSize: '1.125rem', color: 'var(--primary)', fontFamily: 'monospace' }}>
-                  {formatCurrency(order.totalAmount)}
-                </strong>
-              </div>
+          {/* Key Details Card */}
+          <div style={{
+            background: 'var(--card-subtle)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-hairline)',
+            padding: '1.25rem',
+            marginBottom: '2rem',
+            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Order ID:</span>
+              <strong style={{ fontSize: '0.9375rem', fontFamily: 'monospace', color: 'var(--slate-dark)' }}>
+                #{order.orderId}
+              </strong>
             </div>
 
-            {/* Next Steps Fulfillment Timeline */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>
-                Automated Fulfillment Pipeline:
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--stock-in)' }}>check_circle</span>
-                  <span><strong>Component Reservation Locked:</strong> Silicon lot inventory decremented.</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--stock-in)' }}>check_circle</span>
-                  <span><strong>Payment Verification:</strong> 200 OK captured by mock gateway.</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--secondary)' }}>schedule</span>
-                  <span style={{ color: 'var(--text-muted)' }}>Warehouse inspection & anti-static ESD packaging (within 4h).</span>
-                </div>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Total Amount:</span>
+              <strong style={{ fontSize: '1.125rem', fontFamily: 'var(--font-headline)', color: 'var(--primary)' }}>
+                {formatCurrency(order.totalAmount)}
+              </strong>
             </div>
 
-            {/* Items Summary Table */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-                Purchased Hardware Items:
-              </h3>
-              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                {order.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      borderBottom: idx !== order.items.length - 1 ? '1px solid var(--border-hairline)' : 'none',
-                      fontSize: '0.875rem',
-                      background: idx % 2 === 0 ? '#ffffff' : 'var(--card-subtle)',
-                    }}
-                  >
-                    <span>{item.name} × <strong>{item.quantity}</strong></span>
-                    <strong style={{ fontFamily: 'monospace' }}>{formatCurrency(item.subtotal)}</strong>
-                  </div>
-                ))}
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Payment ID:</span>
+              <strong style={{ fontSize: '0.8125rem', fontFamily: 'monospace', color: 'var(--slate-dark)' }}>
+                {order.paymentId || `PAY-${order.orderId.slice(-6).toUpperCase()}`}
+              </strong>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
-              <Link to={`/orders/${order.orderId}`} className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
-                <span className="material-symbols-outlined">receipt_long</span>
-                View Order Details
-              </Link>
-
-              <Link to="/products" className="btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>
-                <span>Continue Shopping</span>
-                <span className="material-symbols-outlined">arrow_forward</span>
-              </Link>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Date:</span>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--slate-dark)' }}>
+                {formatDate(order.createdAt)}
+              </span>
             </div>
+          </div>
+
+          {/* Action Buttons: [ View Order ] and [ Continue Shopping ] */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <Link
+              to={`/orders/${order.orderId}`}
+              className="btn-primary"
+              style={{ width: '100%', minHeight: '48px', fontSize: '1rem' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                receipt_long
+              </span>
+              <span>View Order</span>
+            </Link>
+
+            <Link
+              to="/products"
+              className="btn-secondary"
+              style={{ width: '100%', minHeight: '48px', fontSize: '0.9375rem' }}
+            >
+              <span>Continue Shopping</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                arrow_forward
+              </span>
+            </Link>
           </div>
         </div>
       </div>

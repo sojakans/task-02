@@ -54,238 +54,257 @@ export const CartPage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}>
+      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
           progress_activity
         </span>
-        <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)' }}>Calculating server-side cart totals...</p>
+        <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)' }}>Calculating cart totals...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2.5rem 0 5rem 0' }}>
-      <div className="container">
+    <div className={isEmpty ? 'has-mobile-nav' : 'has-sticky-action'} style={{ padding: '1.5rem 0 3rem 0' }}>
+      <div className="container" style={{ maxWidth: '960px' }}>
         {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '1.25rem' }}>
           <span style={{
-            fontSize: '0.75rem',
+            fontSize: '0.6875rem',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             color: 'var(--primary)',
             display: 'block',
-            marginBottom: '0.25rem',
           }}>
             Allocation Queue
           </span>
           <h1 style={{
             fontFamily: 'var(--font-headline)',
-            fontSize: '2rem',
+            fontSize: '1.5rem',
             fontWeight: 800,
             color: 'var(--slate-dark)',
           }}>
-            Shopping Cart ({cart?.itemCount || 0} items)
+            Shopping Cart ({cart?.itemCount || 0})
           </h1>
         </div>
 
+        {/* Error Alert */}
         {checkoutError && (
           <div style={{
-            padding: '1rem 1.25rem',
+            padding: '0.875rem 1rem',
             borderRadius: 'var(--radius-lg)',
             background: 'var(--stock-out-bg)',
             border: '1px solid var(--stock-out-border)',
             color: 'var(--stock-out-text)',
-            marginBottom: '1.5rem',
+            marginBottom: '1.25rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.75rem',
           }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>error</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>error</span>
             <div>
-              <strong style={{ display: 'block' }}>Checkout Reservation Blocked</strong>
-              <span>{checkoutError}</span>
+              <strong style={{ display: 'block', fontSize: '0.875rem' }}>Checkout Reservation Blocked</strong>
+              <span style={{ fontSize: '0.8125rem' }}>{checkoutError}</span>
             </div>
           </div>
         )}
 
+        {/* Empty State (Requirement 18) */}
         {isEmpty ? (
           <div style={{
             background: 'var(--card)',
             borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--border-hairline)',
-            padding: '4rem 2rem',
+            padding: '4rem 1.5rem',
             textAlign: 'center',
             boxShadow: 'var(--shadow-sm)',
           }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--text-subtle)' }}>
-              production_quantity_limits
-            </span>
-            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.375rem', marginTop: '1rem', color: 'var(--slate-dark)' }}>
-              Your Component Cart is Empty
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', marginTop: '0.5rem', maxWidth: '400px', margin: '0.5rem auto 1.5rem auto' }}>
-              Explore our microcontrollers, development boards, and calibrated sensor modules to configure your project.
+            <div style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              background: 'var(--card-subtle)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-subtle)',
+              marginBottom: '1rem',
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '40px' }}>
+                remove_shopping_cart
+              </span>
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--slate-dark)' }}>
+              Your cart is empty.
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.375rem', maxWidth: '360px', margin: '0.375rem auto 1.5rem' }}>
+              Explore our microcontrollers, sensors, and development boards to start building.
             </p>
-            <Link to="/products" className="btn-primary" style={{ padding: '0.75rem 1.75rem' }}>
-              Discover Hardware
+            <Link
+              to="/products"
+              className="btn-primary"
+              style={{ padding: '0.75rem 1.75rem', minHeight: '44px', fontSize: '0.9375rem' }}
+            >
+              Browse Products
             </Link>
           </div>
         ) : (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2.5rem',
+            gap: '1.5rem',
             alignItems: 'start',
           }}>
-            {/* Left: Itemized Cart Items */}
-            <div style={{
-              background: 'var(--card)',
-              borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-hairline)',
-              boxShadow: 'var(--shadow-sm)',
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                padding: '1rem 1.5rem',
-                borderBottom: '1px solid var(--border-hairline)',
-                background: 'var(--card-subtle)',
-                fontWeight: 700,
-                fontSize: '0.875rem',
-                color: 'var(--slate-dark)',
-              }}>
-                Itemized Component Specifications
-              </div>
+            {/* ============================================================
+                ITEMIZED CART CARDS (Requirement 6: No large desktop tables)
+                ============================================================ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              {items.map((item) => (
+                <div
+                  key={item.productId}
+                  className="spec-card"
+                  style={{
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}
+                >
+                  {/* Top Row: Thumbnail, Name, Unit Price, Remove Button */}
+                  <div style={{ display: 'flex', gap: '0.875rem', alignItems: 'flex-start' }}>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      style={{
+                        width: '68px',
+                        height: '68px',
+                        borderRadius: 'var(--radius-md)',
+                        objectFit: 'cover',
+                        border: '1px solid var(--border-hairline)',
+                        background: '#f8fafc',
+                        flexShrink: 0,
+                      }}
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
+                      }}
+                    />
 
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {items.map((item) => (
-                  <div
-                    key={item.productId}
-                    style={{
-                      padding: '1.25rem 1.5rem',
-                      borderBottom: '1px solid var(--border-hairline)',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '1.25rem',
-                    }}
-                  >
-                    {/* Item Image & Title */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '220px' }}>
-                      <img
-                        src={item.image}
-                        alt={item.name}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link
+                        to={`/products/${item.productId}`}
                         style={{
-                          width: '64px',
-                          height: '64px',
-                          borderRadius: '8px',
-                          objectFit: 'cover',
-                          border: '1px solid var(--border-hairline)',
+                          fontWeight: 700,
+                          fontSize: '0.9375rem',
+                          color: 'var(--slate-dark)',
+                          lineHeight: 1.3,
+                          display: 'block',
+                          marginBottom: '0.25rem',
                         }}
-                      />
-                      <div>
-                        <Link
-                          to={`/products/${item.productId}`}
-                          style={{
-                            fontWeight: 700,
-                            fontSize: '0.9375rem',
-                            color: 'var(--slate-dark)',
-                            display: 'block',
-                            marginBottom: '0.25rem',
-                          }}
-                        >
-                          {item.name}
-                        </Link>
-                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                          Unit: {formatCurrency(item.price)}
-                        </span>
-                      </div>
+                      >
+                        {item.name}
+                      </Link>
+                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                        Unit: {formatCurrency(item.price)}
+                      </span>
                     </div>
 
-                    {/* Quantity Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{
-                        display: 'inline-flex',
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.productId)}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '6px',
+                        display: 'flex',
                         alignItems: 'center',
-                        border: '1px solid var(--border-hairline)',
-                        borderRadius: 'var(--radius-md)',
-                        overflow: 'hidden',
-                      }}>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                          style={{ padding: '0.4rem 0.6rem', background: '#f8fafc', fontWeight: 700 }}
-                        >
-                          -
-                        </button>
-                        <span style={{ minWidth: '36px', textAlign: 'center', fontWeight: 700, fontSize: '0.875rem' }}>
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                          style={{ padding: '0.4rem 0.6rem', background: '#f8fafc', fontWeight: 700 }}
-                        >
-                          +
-                        </button>
-                      </div>
+                        justifyContent: 'center',
+                        color: 'var(--text-subtle)',
+                        background: 'var(--card-subtle)',
+                        flexShrink: 0,
+                      }}
+                      aria-label={`Remove ${item.name} from cart`}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                        delete
+                      </span>
+                    </button>
+                  </div>
 
+                  {/* Bottom Row: Stepper and Subtotal */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingTop: '0.5rem',
+                    borderTop: '1px solid var(--border-hairline)',
+                  }}>
+                    {/* Stepper (Min 44px tap targets) */}
+                    <div className="touch-stepper">
                       <button
                         type="button"
-                        onClick={() => removeFromCart(item.productId)}
-                        style={{
-                          color: 'var(--text-subtle)',
-                          padding: '0.4rem',
-                          borderRadius: '4px',
-                        }}
-                        title="Remove from cart"
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        aria-label="Decrease quantity"
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                          delete
-                        </span>
+                        -
+                      </button>
+                      <span className="stepper-value">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        aria-label="Increase quantity"
+                      >
+                        +
                       </button>
                     </div>
 
                     {/* Subtotal */}
-                    <div style={{ textAlign: 'right', minWidth: '90px' }}>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', display: 'block' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
                         Subtotal
                       </span>
-                      <strong style={{ fontSize: '1rem', color: 'var(--slate-dark)', fontFamily: 'monospace' }}>
+                      <span style={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        color: 'var(--slate-dark)',
+                      }}>
                         {formatCurrency(item.subtotal)}
-                      </strong>
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
 
-            {/* Right: Server Order Summary & Checkout Action */}
+            {/* ============================================================
+                PRICING SUMMARY CARD
+                ============================================================ */}
             <div style={{
               background: 'var(--card)',
               borderRadius: 'var(--radius-xl)',
               border: '1px solid var(--border-hairline)',
-              padding: '1.75rem',
-              boxShadow: 'var(--shadow-md)',
+              padding: '1.25rem',
+              boxShadow: 'var(--shadow-sm)',
             }}>
               <h3 style={{
                 fontFamily: 'var(--font-headline)',
-                fontSize: '1.125rem',
+                fontSize: '1rem',
                 fontWeight: 700,
                 color: 'var(--slate-dark)',
-                marginBottom: '1.25rem',
+                marginBottom: '1rem',
               }}>
-                Order Pricing Summary
+                Order Summary
               </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <span>Verified Subtotal:</span>
+                  <span>Subtotal:</span>
                   <span style={{ fontWeight: 600, color: 'var(--slate-dark)' }}>{formatCurrency(cart?.subtotal)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <span>Hardware Excise & Tax:</span>
+                  <span>Taxes & Hardware Excise:</span>
                   <span style={{ fontWeight: 600, color: 'var(--stock-in)' }}>Included</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
@@ -295,16 +314,16 @@ export const CartPage = () => {
 
                 <div style={{
                   paddingTop: '0.75rem',
-                  marginTop: '0.5rem',
+                  marginTop: '0.25rem',
                   borderTop: '1px solid var(--border-hairline)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'baseline',
                 }}>
-                  <strong style={{ fontSize: '1.125rem', color: 'var(--slate-dark)' }}>Total Payable:</strong>
+                  <strong style={{ fontSize: '1rem', color: 'var(--slate-dark)' }}>Total:</strong>
                   <span style={{
                     fontFamily: 'var(--font-headline)',
-                    fontSize: '1.625rem',
+                    fontSize: '1.5rem',
                     fontWeight: 800,
                     color: 'var(--primary)',
                   }}>
@@ -315,54 +334,102 @@ export const CartPage = () => {
 
               {/* Stock Reservation Notice */}
               <div style={{
-                padding: '0.875rem',
+                padding: '0.75rem',
                 borderRadius: 'var(--radius-md)',
                 background: 'var(--card-subtle)',
                 border: '1px solid var(--border-hairline)',
                 fontSize: '0.75rem',
                 color: 'var(--text-muted)',
-                marginBottom: '1.5rem',
+                marginBottom: '1rem',
                 display: 'flex',
                 gap: '0.5rem',
+                alignItems: 'flex-start',
               }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)', marginTop: '2px' }}>
                   lock_clock
                 </span>
                 <span>
-                  Starting checkout triggers an atomic <strong>5-minute stock reservation lock</strong> to secure components against race conditions.
+                  Proceeding to checkout holds inventory for <strong>5 minutes</strong> to guarantee allocation.
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handleStartCheckout}
-                disabled={isEmpty || checkingOut}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  fontSize: '1rem',
-                  boxShadow: 'var(--shadow-md)',
-                }}
-              >
-                {checkingOut ? (
-                  <>
-                    <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
-                      sync
-                    </span>
-                    Reserving Inventory...
-                  </>
-                ) : (
-                  <>
-                    <span>Proceed to Stock Reservation</span>
-                    <span className="material-symbols-outlined">arrow_forward</span>
-                  </>
-                )}
-              </button>
+              {/* Desktop Checkout CTA */}
+              <div className="desktop-only">
+                <button
+                  type="button"
+                  onClick={handleStartCheckout}
+                  disabled={isEmpty || checkingOut}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '0.875rem', fontSize: '1rem', minHeight: '48px' }}
+                >
+                  {checkingOut ? (
+                    <>
+                      <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
+                        sync
+                      </span>
+                      <span>Reserving Stock...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Proceed to Checkout</span>
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* ============================================================
+          STICKY BOTTOM ACTION BAR (Requirement 6)
+          Subtotal / Total + Proceed to Checkout
+          ============================================================ */}
+      {!isEmpty && (
+        <div className="mobile-sticky-action-bar">
+          <div>
+            <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
+              Total Payable
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-headline)',
+              fontSize: '1.1875rem',
+              fontWeight: 800,
+              color: 'var(--primary)',
+            }}>
+              {formatCurrency(cart?.total)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleStartCheckout}
+            disabled={isEmpty || checkingOut}
+            className="btn-primary"
+            style={{
+              flex: 1,
+              minHeight: '48px',
+              fontSize: '0.9375rem',
+              padding: '0.75rem 1rem',
+            }}
+          >
+            {checkingOut ? (
+              <>
+                <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
+                  sync
+                </span>
+                <span>Reserving...</span>
+              </>
+            ) : (
+              <>
+                <span>Proceed to Checkout</span>
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

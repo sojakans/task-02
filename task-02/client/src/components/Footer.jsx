@@ -6,7 +6,7 @@ export const Footer = () => {
       background: 'var(--slate-dark)',
       color: '#ffffff',
       paddingTop: '3rem',
-      paddingBottom: '2.5rem',
+      paddingBottom: 'calc(var(--bottom-nav-height) + var(--safe-bottom) + 2rem)',
       marginTop: 'auto',
       borderTop: '1px solid var(--slate-surface)',
     }}>

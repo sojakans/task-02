@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { BottomNav } from './components/BottomNav';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -24,7 +25,7 @@ function App() {
         <Router>
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Header />
-            <main style={{ flex: 1 }}>
+            <main className="has-mobile-nav" style={{ flex: 1 }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/products" element={<ProductsPage />} />
@@ -40,6 +41,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <BottomNav />
           </div>
         </Router>
       </CartProvider>

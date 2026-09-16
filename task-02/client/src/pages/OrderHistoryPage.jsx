@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { StatusBadge } from '../components/StatusBadge';
 
 export const OrderHistoryPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,26 +38,26 @@ export const OrderHistoryPage = () => {
 
   if (!isAuthenticated) {
     return (
-      <div style={{ padding: '4rem 0 6rem 0' }}>
-        <div className="container" style={{ maxWidth: '480px', textAlign: 'center' }}>
+      <div style={{ padding: '3rem 1rem 6rem 1rem' }}>
+        <div className="container" style={{ maxWidth: '440px', textAlign: 'center' }}>
           <div style={{
             background: 'var(--card)',
             borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--border-hairline)',
-            padding: '3rem 2rem',
+            padding: '2.5rem 1.5rem',
             boxShadow: 'var(--shadow-sm)',
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--primary)' }}>
               lock_person
             </span>
-            <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.375rem', marginTop: '1rem', color: 'var(--slate-dark)' }}>
+            <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginTop: '0.75rem', color: 'var(--slate-dark)' }}>
               Sign In to View Orders
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-              Please sign in to access your hardware purchases, reservation holds, and refund telemetry.
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.375rem', marginBottom: '1.5rem' }}>
+              Access your hardware orders, stock reservation timers, and cancellation records.
             </p>
-            <Link to="/login?redirect=/orders" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
-              Sign In to Maker Account
+            <Link to="/login?redirect=/orders" className="btn-primary" style={{ width: '100%', minHeight: '46px', fontSize: '0.9375rem' }}>
+              Sign In to Account
             </Link>
           </div>
         </div>
@@ -71,29 +71,33 @@ export const OrderHistoryPage = () => {
   });
 
   return (
-    <div style={{ padding: '2.5rem 0 5rem 0' }}>
-      <div className="container">
+    <div style={{ padding: '1.5rem 0 4rem 0' }}>
+      <div className="container" style={{ maxWidth: '640px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '2rem' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1rem',
+        }}>
           <div>
             <span style={{
-              fontSize: '0.75rem',
+              fontSize: '0.6875rem',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               color: 'var(--primary)',
               display: 'block',
-              marginBottom: '0.25rem',
             }}>
               Order History & Tracking
             </span>
             <h1 style={{
               fontFamily: 'var(--font-headline)',
-              fontSize: '2rem',
+              fontSize: '1.5rem',
               fontWeight: 800,
               color: 'var(--slate-dark)',
             }}>
-              My Engineering Orders
+              My Orders
             </h1>
           </div>
 
@@ -101,201 +105,204 @@ export const OrderHistoryPage = () => {
             type="button"
             onClick={fetchOrders}
             className="btn-secondary"
-            style={{ fontSize: '0.8125rem', padding: '0.5rem 0.875rem' }}
+            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', minHeight: '36px' }}
+            title="Refresh order log"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
-            Refresh Log
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
+            <span>Refresh</span>
           </button>
         </div>
 
-        {/* Tab Filters */}
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          borderBottom: '1px solid var(--border-hairline)',
-          marginBottom: '2rem',
-          overflowX: 'auto',
-          paddingBottom: '0.25rem',
-        }}>
-          {['ALL', 'RESERVED', 'PAID', 'CANCELLED', 'EXPIRED'].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setFilterTab(tab)}
-              style={{
-                padding: '0.625rem 1rem',
-                fontSize: '0.875rem',
-                fontWeight: filterTab === tab ? 700 : 500,
-                color: filterTab === tab ? 'var(--primary)' : 'var(--text-muted)',
-                borderBottom: filterTab === tab ? '2px solid var(--primary)' : '2px solid transparent',
-                background: 'none',
-                transition: 'all 0.15s',
-              }}
-            >
-              {tab === 'ALL' ? 'All Orders' : tab}
-              <span style={{
-                marginLeft: '0.375rem',
-                fontSize: '0.75rem',
-                padding: '0.1rem 0.4rem',
-                borderRadius: '9999px',
-                background: filterTab === tab ? 'var(--primary-subtle)' : 'var(--card-subtle)',
-                color: filterTab === tab ? 'var(--primary)' : 'var(--text-subtle)',
-              }}>
-                {tab === 'ALL' ? orders.length : orders.filter((o) => o.status === tab).length}
-              </span>
-            </button>
-          ))}
+        {/* Tab Filters (Horizontally Scrollable) */}
+        <div className="category-chips-bar" style={{ marginBottom: '1.25rem' }}>
+          {['ALL', 'RESERVED', 'PAID', 'CANCELLED', 'EXPIRED', 'FAILED'].map((tab) => {
+            const count = tab === 'ALL' ? orders.length : orders.filter((o) => o.status === tab).length;
+            const active = filterTab === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setFilterTab(tab)}
+                className={`chip-item ${active ? 'active' : ''}`}
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+              >
+                <span>{tab === 'ALL' ? 'All' : tab}</span>
+                <span style={{
+                  fontSize: '0.6875rem',
+                  padding: '0.05rem 0.35rem',
+                  borderRadius: '9999px',
+                  background: active ? 'rgba(255,255,255,0.3)' : '#e2e8f0',
+                  color: active ? '#ffffff' : 'var(--text-muted)',
+                  fontWeight: 700,
+                }}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* States */}
+        {/* Skeletons while loading */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
-              progress_activity
-            </span>
-            <p style={{ marginTop: '0.75rem' }}>Loading verified order records...</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {[1, 2, 3].map((idx) => (
+              <div key={idx} className="spec-card" style={{ padding: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <div className="skeleton-box" style={{ width: '100px', height: '18px' }} />
+                  <div className="skeleton-box" style={{ width: '80px', height: '18px', borderRadius: '12px' }} />
+                </div>
+                <div className="skeleton-box" style={{ width: '120px', height: '14px', marginBottom: '0.5rem' }} />
+                <div className="skeleton-box" style={{ width: '90px', height: '22px', marginBottom: '0.75rem' }} />
+                <div className="skeleton-box" style={{ width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+            ))}
           </div>
         ) : error ? (
-          <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--stock-out-bg)', borderRadius: 'var(--radius-lg)', color: 'var(--stock-out-text)' }}>
+          <div style={{
+            textAlign: 'center',
+            padding: '2.5rem 1.5rem',
+            background: 'var(--stock-out-bg)',
+            borderRadius: 'var(--radius-xl)',
+            color: 'var(--stock-out-text)',
+          }}>
             <span className="material-symbols-outlined" style={{ fontSize: '36px' }}>error</span>
             <p style={{ marginTop: '0.5rem', fontWeight: 600 }}>{error}</p>
+            <button onClick={fetchOrders} className="btn-secondary" style={{ marginTop: '1rem', minHeight: '40px' }}>
+              Retry
+            </button>
           </div>
         ) : filteredOrders.length === 0 ? (
+          /* Empty State (Requirement 18) */
           <div style={{
             background: 'var(--card)',
             borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--border-hairline)',
-            padding: '4rem 2rem',
+            padding: '4rem 1.5rem',
             textAlign: 'center',
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-subtle)' }}>
-              inbox
+              receipt_long
             </span>
-            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginTop: '0.75rem' }}>
-              No orders found in '{filterTab}'
+            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginTop: '0.75rem', color: 'var(--slate-dark)' }}>
+              You haven't placed any orders yet.
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Browse hardware and complete a checkout session to test order logging.
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.375rem', maxWidth: '340px', margin: '0.375rem auto 1.5rem' }}>
+              Browse hardware and complete a checkout session to track order allocations here.
             </p>
-            <Link to="/products" className="btn-primary" style={{ marginTop: '1.25rem' }}>
-              Shop Products
+            <Link to="/products" className="btn-primary" style={{ padding: '0.75rem 1.5rem', minHeight: '44px' }}>
+              Start Shopping
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {filteredOrders.map((order) => (
-              <div
-                key={order.orderId}
-                className="spec-card"
-                style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-              >
-                {/* Header Row */}
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '1rem',
-                  paddingBottom: '1rem',
-                  borderBottom: '1px solid var(--border-hairline)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                        Order ID
-                      </span>
-                      <h3 style={{ fontFamily: 'monospace', fontSize: '1.125rem', fontWeight: 800, color: 'var(--slate-dark)' }}>
-                        #{order.orderId}
-                      </h3>
-                    </div>
-
-                    <div style={{ width: '1px', height: '24px', background: 'var(--border-hairline)' }} />
-
-                    <div>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                        Date
-                      </span>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--slate-dark)', fontWeight: 500 }}>
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <StatusBadge status={order.status} type="order" />
-
-                    {/* Refund Badge if available */}
-                    {order.refund && (
-                      <span style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        background: '#ecfdf5',
-                        color: '#065f46',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        border: '1px solid #a7f3d0',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                      }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>currency_exchange</span>
-                        Refund: {order.refund.status}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Items & Total Row */}
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '1.5rem',
-                }}>
-                  {/* Items summary */}
-                  <div style={{ flex: 1, minWidth: '240px' }}>
-                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                      {order.items.map((item, idx) => (
-                        <li key={idx} style={{ fontSize: '0.875rem', color: 'var(--slate-dark)' }}>
-                          <strong>{item.name}</strong> × <span style={{ fontFamily: 'monospace' }}>{item.quantity}</span>
-                          <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem', fontSize: '0.8125rem' }}>
-                            ({formatCurrency(item.subtotal)})
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Historical Total */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>
-                      Historical Order Total
-                    </span>
-                    <strong style={{
-                      fontFamily: 'var(--font-headline)',
-                      fontSize: '1.375rem',
+          /* ============================================================
+              REQUIREMENT 13: MOBILE ORDER CARDS (No tables)
+              #ORD-1005  [STATUS]
+              2 Products
+              Rs. 12,500
+              16 Sep 2026
+              [ View Details ]
+              ============================================================ */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredOrders.map((order) => {
+              const totalItemsCount = order.items.reduce((acc, cur) => acc + cur.quantity, 0);
+              return (
+                <div
+                  key={order.orderId}
+                  className="spec-card"
+                  style={{
+                    padding: '1.25rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.875rem',
+                  }}
+                >
+                  {/* Top: Order ID & Status Badge */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid var(--border-hairline)',
+                  }}>
+                    <span style={{
+                      fontFamily: 'monospace',
+                      fontSize: '1rem',
                       fontWeight: 800,
                       color: 'var(--slate-dark)',
                     }}>
-                      {formatCurrency(order.totalAmount)}
-                    </strong>
+                      #{order.orderId}
+                    </span>
+                    <StatusBadge status={order.status} type="order" />
                   </div>
 
-                  {/* Details Button */}
+                  {/* Products count & Item snippet */}
                   <div>
-                    <Link
-                      to={`/orders/${order.orderId}`}
-                      className="btn-primary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                    >
-                      <span>View Details</span>
-                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
-                    </Link>
+                    <span style={{
+                      fontSize: '0.9375rem',
+                      fontWeight: 700,
+                      color: 'var(--slate-dark)',
+                      display: 'block',
+                      marginBottom: '0.25rem',
+                    }}>
+                      {totalItemsCount} {totalItemsCount === 1 ? 'Product' : 'Products'}
+                    </span>
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      {order.items.map((i) => i.name).slice(0, 2).join(', ')}
+                      {order.items.length > 2 ? ' ...' : ''}
+                    </span>
                   </div>
+
+                  {/* Total & Date Row */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    justifyContent: 'space-between',
+                    paddingTop: '0.25rem',
+                  }}>
+                    <div>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
+                        Total Amount
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-headline)',
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        color: 'var(--slate-dark)',
+                      }}>
+                        {formatCurrency(order.totalAmount)}
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
+                        Date
+                      </span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--slate-dark)' }}>
+                        {formatDate(order.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Primary CTA: [ View Details ] */}
+                  <Link
+                    to={`/orders/${order.orderId}`}
+                    className="btn-primary"
+                    style={{
+                      width: '100%',
+                      minHeight: '44px',
+                      fontSize: '0.875rem',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    <span>View Details</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                      arrow_forward
+                    </span>
+                  </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
