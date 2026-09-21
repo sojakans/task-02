@@ -9,7 +9,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Clock,
-  Zap,
   AlertCircle,
   Cpu,
   ArrowLeft,
@@ -32,6 +31,8 @@ export const CartPage = () => {
 
   const items = cart?.items || [];
   const isEmpty = items.length === 0;
+  const cartTotal = cart?.total ?? cart?.totalAmount ?? cart?.subtotal ?? 0;
+  const totalItemCount = cart?.itemCount || items.reduce((sum, i) => sum + (i.quantity || 1), 0);
 
   const handleStartCheckout = async () => {
     if (isEmpty || checkingOut) return;
@@ -88,7 +89,7 @@ export const CartPage = () => {
             <span>Hardware Allocation Queue</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Active Cart Matrix ({cart?.itemCount || 0})
+            Active Cart Matrix ({totalItemCount})
           </h1>
         </div>
         <Link
@@ -135,90 +136,103 @@ export const CartPage = () => {
           {/* Items List */}
           <div className="lg:col-span-8 space-y-4">
             <AnimatePresence>
-              {items.map((item) => (
-                <motion.div
-                  key={item.product._id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#0d1527]/80 backdrop-blur-xl border border-white/[0.08] hover:border-cyan-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
-                >
-                  {/* Left: Thumbnail & Details */}
-                  <div className="flex items-center gap-4 min-w-0">
-                    <Link
-                      to={`/products/${item.product._id}`}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#070b14] border border-white/[0.08] overflow-hidden shrink-0 block"
-                    >
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
-                        }}
-                      />
-                    </Link>
+              {items.map((item, index) => {
+                // Safely extract item fields supporting both backend structures
+                const productId = item.productId || item.product?._id || item._id || `cart-item-${index}`;
+                const name = item.name || item.product?.name || 'Hardware Component';
+                const image = item.image || item.product?.image || '';
+                const price = Number(item.price ?? item.product?.price ?? 0);
+                const quantity = Number(item.quantity ?? 1);
+                const availableStock = Number(item.availableStock ?? item.product?.availableStock ?? 99);
+                const category = item.category || item.product?.category || 'Silicon Component';
+                const itemSubtotal = Number(item.subtotal ?? (price * quantity));
 
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider block">
-                        {item.product.category}
-                      </span>
+                return (
+                  <motion.div
+                    key={productId}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-[#0d1527]/80 backdrop-blur-xl border border-white/[0.08] hover:border-cyan-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
+                  >
+                    {/* Left: Thumbnail & Details */}
+                    <div className="flex items-center gap-4 min-w-0">
                       <Link
-                        to={`/products/${item.product._id}`}
-                        className="font-display font-bold text-sm sm:text-base text-white hover:text-cyan-300 transition-colors line-clamp-1 block"
+                        to={`/products/${productId}`}
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#070b14] border border-white/[0.08] overflow-hidden shrink-0 block"
                       >
-                        {item.product.name}
+                        <img
+                          src={image}
+                          alt={name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src =
+                              'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
+                          }}
+                        />
                       </Link>
-                      <span className="text-xs font-mono text-slate-400 mt-1 block">
-                        {formatCurrency(item.product.price)} each
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Right: Quantity Stepper & Subtotal */}
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
-                    {/* Stepper */}
-                    <div className="flex items-center bg-[#070b14] border border-white/[0.08] rounded-xl p-1">
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider block">
+                          {category}
+                        </span>
+                        <Link
+                          to={`/products/${productId}`}
+                          className="font-display font-bold text-sm sm:text-base text-white hover:text-cyan-300 transition-colors line-clamp-1 block"
+                        >
+                          {name}
+                        </Link>
+                        <span className="text-xs font-mono text-slate-400 mt-1 block">
+                          {formatCurrency(price)} each
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: Quantity Stepper & Subtotal */}
+                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
+                      {/* Stepper */}
+                      <div className="flex items-center bg-[#070b14] border border-white/[0.08] rounded-xl p-1">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(productId, quantity - 1)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center font-mono font-bold text-xs text-white">
+                          {quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(productId, quantity + 1)}
+                          disabled={quantity >= availableStock}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Subtotal */}
+                      <div className="text-right min-w-[80px]">
+                        <span className="font-mono font-bold text-sm sm:text-base text-white">
+                          {formatCurrency(itemSubtotal)}
+                        </span>
+                      </div>
+
+                      {/* Delete button */}
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+                        onClick={() => removeFromCart(productId)}
+                        title="Remove component"
+                        className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                       >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="w-8 text-center font-mono font-bold text-xs text-white">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                        disabled={item.quantity >= item.product.availableStock}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-
-                    {/* Subtotal */}
-                    <div className="text-right min-w-[80px]">
-                      <span className="font-mono font-bold text-sm sm:text-base text-white">
-                        {formatCurrency(item.product.price * item.quantity)}
-                      </span>
-                    </div>
-
-                    {/* Delete button */}
-                    <button
-                      type="button"
-                      onClick={() => removeFromCart(item.product._id)}
-                      title="Remove component"
-                      className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
 
@@ -232,7 +246,7 @@ export const CartPage = () => {
               <div className="space-y-2.5 font-mono text-xs text-slate-300">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Total Items:</span>
-                  <span className="text-white font-bold">{cart?.itemCount || 0}</span>
+                  <span className="text-white font-bold">{totalItemCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Fulfillment:</span>
@@ -251,7 +265,7 @@ export const CartPage = () => {
                   </span>
                   <div className="text-2xl font-black font-mono text-white tracking-tight">
                     <AnimatedNumber
-                      value={cart?.totalAmount || 0}
+                      value={cartTotal}
                       format={(v) => formatCurrency(v)}
                     />
                   </div>
