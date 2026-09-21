@@ -35,12 +35,11 @@ const checkout = async (req, res, next) => {
 /**
  * GET /api/orders
  * Returns complete order history with payment and refund statuses
+ * (requireAuth guarantees req.user is always present)
  */
 const getOrders = async (req, res, next) => {
   try {
-    const query = req.user
-      ? { $or: [{ userId: req.user._id }, { 'customer.email': req.user.email }] }
-      : {};
+    const query = { $or: [{ userId: req.user._id }, { 'customer.email': req.user.email }] };
     const orders = await Order.find(query).sort({ createdAt: -1 });
 
     // Attach corresponding payment & refund information for complete historical clarity
@@ -104,6 +103,15 @@ const getOrderById = async (req, res, next) => {
       throw new ApiError(404, `Order '${orderId}' not found`);
     }
 
+    // Ownership guard: users can only view their own orders
+    if (
+      req.user &&
+      order.userId &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
+      throw new ApiError(403, 'You do not have permission to view this order.');
+    }
+
     // Dynamic expiration check
     if (
       order.status === ORDER_STATUS.RESERVED &&
@@ -138,6 +146,19 @@ const cancelOrder = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { reason } = req.body;
+
+    // Ownership guard: users can only cancel their own orders
+    const order = await Order.findOne({ orderId });
+    if (!order) {
+      throw new ApiError(404, `Order '${orderId}' not found`);
+    }
+    if (
+      req.user &&
+      order.userId &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
+      throw new ApiError(403, 'You do not have permission to cancel this order.');
+    }
 
     const result = await orderService.cancelOrder(orderId, reason);
 

@@ -109,7 +109,7 @@ export const CheckoutPage = () => {
       {/* Countdown Timer for Stock Hold */}
       {isReserved && (
         <ReservationCountdown
-          expiresAt={order.expiresAt}
+          expiresAt={order.reservationExpiresAt}
           onExpire={handleCountdownExpire}
         />
       )}

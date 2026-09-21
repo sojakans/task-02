@@ -84,29 +84,33 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* System Telemetry */}
+          {/* Customer Support */}
           <div>
             <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-4 border-l-2 border-cyan-500 pl-2">
-              System Telemetry
+              Customer Support
             </h4>
-            <div className="bg-[#0a0f1d] border border-white/[0.06] rounded-xl p-3 font-mono text-[11px] space-y-1.5 text-slate-400">
-              <div className="flex justify-between">
-                <span>GATEWAY:</span>
-                <span className="text-cyan-400">REST API v1</span>
-              </div>
-              <div className="flex justify-between">
-                <span>IDEMPOTENCY:</span>
-                <span className="text-emerald-400">ENFORCED</span>
-              </div>
-              <div className="flex justify-between">
-                <span>DATABASE:</span>
-                <span className="text-slate-300">SQLite Atomic</span>
-              </div>
-              <div className="flex justify-between">
-                <span>CLIENT UI:</span>
-                <span className="text-purple-400">React 19 + 3D Fiber</span>
-              </div>
-            </div>
+            <ul className="space-y-2 text-xs font-mono">
+              <li>
+                <Link to="/orders" className="hover:text-cyan-400 transition-colors">
+                  &gt; Track Your Orders
+                </Link>
+              </li>
+              <li>
+                <span className="hover:text-cyan-400 transition-colors cursor-pointer">
+                  &gt; Shipping & Returns
+                </span>
+              </li>
+              <li>
+                <span className="hover:text-cyan-400 transition-colors cursor-pointer">
+                  &gt; FAQs & Help Center
+                </span>
+              </li>
+              <li>
+                <span className="hover:text-cyan-400 transition-colors cursor-pointer">
+                  &gt; Contact Us
+                </span>
+              </li>
+            </ul>
           </div>
 
         </div>

@@ -72,7 +72,7 @@ export const Header = () => {
     mobileTitle = 'Payment Gateway';
     showBack = true;
   } else if (pathname.startsWith('/orders/')) {
-    mobileTitle = 'Telemetry & Logistics';
+    mobileTitle = 'Order Details';
     showBack = true;
   }
 

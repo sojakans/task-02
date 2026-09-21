@@ -18,7 +18,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const refundRoutes = require('./routes/refundRoutes');
 const orderController = require('./controllers/orderController');
-const { optionalAuth } = require('./middleware/auth');
+const { optionalAuth, requireAuth } = require('./middleware/auth');
 const Product = require('./models/Product');
 
 const app = express();
@@ -57,7 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/carts', cartRoutes);
 app.post('/api/checkout', optionalAuth, orderController.checkout);
-app.use('/api/orders', optionalAuth, orderRoutes);
+app.use('/api/orders', requireAuth, orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/refunds', refundRoutes);
 

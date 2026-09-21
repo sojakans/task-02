@@ -21,6 +21,7 @@ export const OrderHistoryPage = () => {
   const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterTab, setFilterTab] = useState('ALL');
 
   const fetchOrders = async () => {
@@ -54,7 +55,7 @@ export const OrderHistoryPage = () => {
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="font-display font-bold text-xl text-white">Sign In for Order Telemetry</h2>
+          <h2 className="font-display font-bold text-xl text-white">Sign In to View Orders</h2>
           <p className="text-xs font-mono text-slate-400">
             Access your stock reservation timers, fulfillment tracking, and simulated refund history.
           </p>
@@ -64,6 +65,25 @@ export const OrderHistoryPage = () => {
                 Sign In to Account
               </Button>
             </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="bg-[#0d1527] border border-rose-500/20 rounded-3xl p-8 shadow-2xl space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+            <Package className="w-6 h-6" />
+          </div>
+          <h2 className="font-display font-bold text-xl text-white">Failed to Load Orders</h2>
+          <p className="text-xs font-mono text-slate-400">{error}</p>
+          <div className="pt-2">
+            <Button variant="primary" size="md" className="w-full" onClick={fetchOrders}>
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -94,10 +114,10 @@ export const OrderHistoryPage = () => {
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest mb-1">
             <Terminal className="w-3.5 h-3.5" />
-            <span>Fulfillment Ledger</span>
+            <span>Your Orders</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Order History & Telemetry
+            Order History
           </h1>
         </div>
         <Link to="/products">
@@ -188,9 +208,10 @@ export const OrderHistoryPage = () => {
                       <Button
                         size="sm"
                         variant={order.status === 'RESERVED' ? 'glow' : 'secondary'}
+                        className="whitespace-nowrap"
                         iconRight={<ChevronRight className="w-3.5 h-3.5" />}
                       >
-                        {order.status === 'RESERVED' ? 'Pay Now' : 'Telemetry'}
+                        {order.status === 'RESERVED' ? 'Pay Now' : 'View Details'}
                       </Button>
                     </Link>
                   </div>
