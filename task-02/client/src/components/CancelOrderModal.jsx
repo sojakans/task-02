@@ -1,120 +1,88 @@
 import React, { useState } from 'react';
+import { AlertTriangle, ShieldCheck, RefreshCw, X } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
 
 export const CancelOrderModal = ({ order, isOpen, onClose, onConfirm, loading }) => {
   const [reason, setReason] = useState('Ordered wrong chip / architecture variant');
 
-  if (!isOpen || !order) return null;
+  if (!order) return null;
 
   const isPaid = order.status === 'PAID';
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header */}
-        <div style={{
-          padding: '1.25rem 1.5rem',
-          borderBottom: '1px solid var(--border-hairline)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--stock-out)', fontSize: '24px' }}>
-              warning
-            </span>
-            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.125rem', fontWeight: 700 }}>
-              Cancel Order #{order.orderId}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            style={{ color: 'var(--text-subtle)', padding: '0.25rem', borderRadius: '4px' }}
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Are you sure you want to cancel this order?
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Cancel Order #${order.orderId?.slice(-8) || order.orderId}`}
+      description="Hardware Inventory Reallocation Protocol"
+      maxWidth="max-w-md"
+    >
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold text-white block">Release Stock Reservation</span>
             {isPaid ? (
-              <strong style={{ color: 'var(--slate-dark)', display: 'block', marginTop: '0.25rem' }}>
-                Because this order has been paid ({formatCurrency(order.totalAmount)}), an automatic refund will be credited immediately, and the reserved silicon components will be returned to the inventory.
-              </strong>
+              <p>
+                Because payment of <strong className="text-white">{formatCurrency(order.totalAmount)}</strong> was confirmed, an automatic simulated refund will be generated and components returned to stock.
+              </p>
             ) : (
-              <strong style={{ color: 'var(--slate-dark)', display: 'block', marginTop: '0.25rem' }}>
-                The reserved stock will be immediately released back to the global component inventory.
-              </strong>
+              <p>
+                The held stock units will be released back immediately to the active hardware catalog.
+              </p>
             )}
-          </p>
-
-          <div>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--slate-dark)', marginBottom: '0.375rem', display: 'block' }}>
-              Cancellation Reason
-            </label>
-            <select
-              className="input-field"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            >
-              <option value="Ordered wrong chip / architecture variant">Ordered wrong chip / architecture variant</option>
-              <option value="Pinout incompatible with custom PCB carrier">Pinout incompatible with custom PCB carrier</option>
-              <option value="Lead time / project deadline requirement changed">Lead time / project deadline requirement changed</option>
-              <option value="Found alternate vendor / surplus stock">Found alternate vendor / surplus stock</option>
-              <option value="Evaluation / test session completed">Evaluation / test session completed</option>
-            </select>
-          </div>
-
-          <div style={{
-            background: 'var(--card-subtle)',
-            padding: '0.875rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-hairline)',
-            fontSize: '0.8125rem',
-            color: 'var(--text-muted)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-              <span>Order Amount:</span>
-              <strong style={{ color: 'var(--slate-dark)' }}>{formatCurrency(order.totalAmount)}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Refund Eligibility:</span>
-              <span style={{ color: isPaid ? 'var(--stock-in)' : 'var(--text-muted)', fontWeight: 600 }}>
-                {isPaid ? '100% Full Immediate Refund' : 'No Charge Incurred'}
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div style={{
-          padding: '1rem 1.5rem',
-          background: 'var(--card-subtle)',
-          borderTop: '1px solid var(--border-hairline)',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '0.75rem',
-        }}>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={onClose}
-            disabled={loading}
+        <div>
+          <label className="text-xs font-mono uppercase font-bold text-slate-400 block mb-1.5">
+            Cancellation Rationale
+          </label>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full bg-[#070b14] border border-white/[0.1] focus:border-cyan-500/60 rounded-xl px-3 py-2.5 text-xs text-white font-mono outline-none cursor-pointer"
           >
+            <option value="Ordered wrong chip / architecture variant">Ordered wrong chip / architecture variant</option>
+            <option value="Pinout incompatible with custom PCB carrier">Pinout incompatible with custom PCB carrier</option>
+            <option value="Lead time / project deadline requirement changed">Lead time / project deadline requirement changed</option>
+            <option value="Found alternate vendor / surplus stock">Found alternate vendor / surplus stock</option>
+            <option value="Evaluation / test session completed">Evaluation / test session completed</option>
+          </select>
+        </div>
+
+        {/* Refund Breakdown */}
+        <div className="bg-[#070b14] border border-white/[0.08] rounded-xl p-3.5 font-mono text-xs space-y-1.5">
+          <div className="flex justify-between text-slate-400">
+            <span>Order Value:</span>
+            <span className="text-white font-bold">{formatCurrency(order.totalAmount)}</span>
+          </div>
+          <div className="flex justify-between text-slate-400">
+            <span>Refund Protocol:</span>
+            <span className={isPaid ? 'text-emerald-400 font-bold' : 'text-slate-300'}>
+              {isPaid ? '100% Full Refund Simulated' : 'No Payment Settled'}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Button variant="secondary" size="md" onClick={onClose} disabled={loading}>
             Keep Order
-          </button>
-          <button
-            type="button"
-            className="btn-danger"
+          </Button>
+          <Button
+            variant="danger"
+            size="md"
             onClick={() => onConfirm(reason)}
             disabled={loading}
+            isLoading={loading}
           >
-            {loading ? 'Processing...' : 'Confirm Cancellation'}
-          </button>
+            Cancel & Return Stock
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

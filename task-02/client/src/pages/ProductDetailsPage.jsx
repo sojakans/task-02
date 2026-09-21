@@ -1,20 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  Cpu,
+  ChevronRight,
+  ShoppingBag,
+  Plus,
+  Minus,
+  Check,
+  ShieldCheck,
+  Clock,
+  Zap,
+  Box,
+  Eye,
+  Layers,
+  Sparkles,
+  ArrowLeft,
+  AlertCircle,
+} from 'lucide-react';
 import { productService } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import { StatusBadge } from '../components/StatusBadge';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { ProductViewer } from '../components/3d/ProductViewer';
+import { AnimatedNumber } from '../components/animations/AnimatedNumber';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { toast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+  const [viewMode, setViewMode] = useState('image'); // 'image' | '3d'
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -56,435 +80,266 @@ export const ProductDetailsPage = () => {
     if (isOutOfStock || adding) return;
 
     setAdding(true);
-    setFeedback(null);
-
     const res = await addToCart(product._id, quantity);
     setAdding(false);
 
     if (res.success) {
-      setFeedback({ type: 'success', text: `Added ${quantity} × ${product.name} to cart!` });
+      toast.success(`Allocated ${quantity} × ${product.name} to cart!`);
     } else {
-      setFeedback({ type: 'error', text: res.message });
+      toast.error(res.message || 'Stock allocation failed');
     }
   };
 
-  // Mobile Skeleton Loader
   if (loading) {
     return (
-      <div className="container" style={{ padding: '2rem 1rem 5rem' }}>
-        <div className="skeleton-box" style={{ width: '100%', height: '300px', borderRadius: 'var(--radius-xl)', marginBottom: '1.5rem' }} />
-        <div className="skeleton-box" style={{ width: '40%', height: '16px', marginBottom: '0.75rem' }} />
-        <div className="skeleton-box" style={{ width: '85%', height: '28px', marginBottom: '1rem' }} />
-        <div className="skeleton-box" style={{ width: '50%', height: '32px', marginBottom: '1.5rem' }} />
-        <div className="skeleton-box" style={{ width: '100%', height: '80px', marginBottom: '1.5rem' }} />
-        <div className="skeleton-box" style={{ width: '100%', height: '50px', borderRadius: 'var(--radius-md)' }} />
+      <div className="max-w-5xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
+          <div className="h-80 bg-slate-800/50 rounded-2xl border border-white/10" />
+          <div className="space-y-4">
+            <div className="h-4 w-28 bg-slate-800 rounded" />
+            <div className="h-8 w-3/4 bg-slate-800 rounded" />
+            <div className="h-20 bg-slate-800/40 rounded-xl" />
+            <div className="h-12 bg-slate-800 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <div style={{
-          maxWidth: '480px',
-          margin: '0 auto',
-          background: 'var(--card)',
-          padding: '2rem 1.5rem',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--stock-out)' }}>
-            error
-          </span>
-          <h2 style={{ fontFamily: 'var(--font-headline)', marginTop: '1rem', fontSize: '1.25rem', color: 'var(--slate-dark)' }}>
-            {error || 'Component Not Found'}
-          </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-            The requested hardware identifier could not be verified in the silicon registry.
+      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+        <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-8 shadow-2xl">
+          <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-4" />
+          <h2 className="font-display font-bold text-xl text-white">Component Registry Error</h2>
+          <p className="text-xs font-mono text-slate-400 mt-2 mb-6">
+            {error || 'The requested silicon item could not be resolved from current inventory records.'}
           </p>
-          <Link to="/products" className="btn-primary" style={{ padding: '0.75rem 1.5rem', minHeight: '44px' }}>
-            Back to Catalog
+          <Link to="/products">
+            <Button variant="primary" iconLeft={<ArrowLeft className="w-4 h-4" />}>
+              Return to Catalog
+            </Button>
           </Link>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="has-sticky-action" style={{ padding: '1.5rem 0 3rem 0' }}>
-      <div className="container" style={{ maxWidth: '960px' }}>
-        {/* Breadcrumb Bar */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.375rem',
-          fontSize: '0.8125rem',
-          color: 'var(--text-muted)',
-          marginBottom: '1.25rem',
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
-        }}>
-          <Link to="/" style={{ color: 'var(--text-muted)' }}>Home</Link>
-          <span>/</span>
-          <Link to="/products" style={{ color: 'var(--text-muted)' }}>Products</Link>
-          <span>/</span>
-          <Link to={`/products?category=${encodeURIComponent(product.category)}`} style={{ color: 'var(--text-muted)' }}>
-            {product.category}
-          </Link>
-          <span>/</span>
-          <span style={{ color: 'var(--slate-dark)', fontWeight: 600 }}>{product.name}</span>
-        </div>
+  const subtotal = (product.price * quantity);
 
-        {/* Mobile Vertical Sequence & Desktop Two-Column Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '2rem',
-          alignItems: 'start',
-        }}>
-          {/* 1. Product Image Card */}
-          <div>
-            <div style={{
-              background: '#ffffff',
-              borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-hairline)',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-sm)',
-              position: 'relative',
-              aspectRatio: '4 / 3',
-            }}>
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-8 overflow-x-auto whitespace-nowrap">
+        <Link to="/" className="hover:text-cyan-400 transition-colors">HOME</Link>
+        <ChevronRight className="w-3 h-3 text-slate-600" />
+        <Link to="/products" className="hover:text-cyan-400 transition-colors">CATALOG</Link>
+        <ChevronRight className="w-3 h-3 text-slate-600" />
+        <Link to={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-cyan-400 transition-colors">
+          {product.category.toUpperCase()}
+        </Link>
+        <ChevronRight className="w-3 h-3 text-slate-600" />
+        <span className="text-slate-200 font-semibold truncate max-w-[200px]">{product.name}</span>
+      </nav>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        
+        {/* Left Column: Media Stage (Image or 3D Interactive Model) */}
+        <div className="lg:col-span-6 space-y-4">
+          
+          <div className="relative aspect-[4/3] w-full rounded-2xl bg-[#090d16] border border-white/[0.08] overflow-hidden shadow-2xl shadow-black/50">
+            {viewMode === 'image' ? (
               <img
                 src={product.image}
                 alt={product.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
                 }}
               />
-              {product.sku && (
-                <div style={{
-                  position: 'absolute',
-                  top: '0.75rem',
-                  left: '0.75rem',
-                  background: 'rgba(15, 23, 42, 0.85)',
-                  color: '#f8fafc',
-                  fontSize: '0.75rem',
-                  fontFamily: 'monospace',
-                  padding: '0.25rem 0.625rem',
-                  borderRadius: '6px',
-                  backdropFilter: 'blur(4px)',
-                }}>
-                  SKU: {product.sku}
-                </div>
-              )}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-radial from-cyan-950/20 to-[#070b14]">
+                <ProductViewer category={product.category} />
+              </div>
+            )}
+
+            {/* Mode Switcher Toggle: 2D Image vs 3D Inspector */}
+            <div className="absolute top-3 right-3 z-10 flex items-center bg-black/60 backdrop-blur-md rounded-xl p-1 border border-white/10">
+              <button
+                onClick={() => setViewMode('image')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
+                  viewMode === 'image'
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(6,182,212,0.5)]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Eye className="w-3 h-3" />
+                <span>Photo</span>
+              </button>
+              <button
+                onClick={() => setViewMode('3d')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
+                  viewMode === '3d'
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(6,182,212,0.5)]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Box className="w-3 h-3" />
+                <span>3D Model</span>
+              </button>
             </div>
 
-            {/* Live Logistics Guarantee Box */}
-            <div style={{
-              marginTop: '1rem',
-              padding: '0.875rem 1rem',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--card-subtle)',
-              border: '1px solid var(--border-hairline)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '22px' }}>
-                  verified
-                </span>
-                <div>
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-dark)' }}>
-                    Certified Factory Lot Stock
-                  </div>
-                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-                    Guaranteed 5-min checkout reservation hold
-                  </div>
-                </div>
+            {/* SKU Badge */}
+            {product.sku && (
+              <div className="absolute bottom-3 left-3 z-10 bg-black/70 backdrop-blur-md border border-white/10 text-slate-300 text-xs font-mono px-2.5 py-1 rounded-lg">
+                SKU: <span className="text-cyan-400 font-bold">{product.sku}</span>
               </div>
-              <span className="badge-stock-in" style={{ fontSize: '0.6875rem' }}>Active</span>
-            </div>
+            )}
           </div>
 
-          {/* 2. Product Information & Actions */}
+          {/* Logistics Guarantee Card */}
+          <div className="bg-[#0b1222] border border-white/[0.08] rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-mono font-bold text-white uppercase tracking-wide">
+                  5-Minute Atomic Hold
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Stock locks immediately once you initiate checkout.
+                </p>
+              </div>
+            </div>
+            <Badge variant="success" size="sm" dot pulse>
+              Live Sync
+            </Badge>
+          </div>
+
+        </div>
+
+        {/* Right Column: Information, Pricing & Cart Action */}
+        <div className="lg:col-span-6 space-y-6">
+          
           <div>
-            {/* Category & Status Row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--secondary)',
-              }}>
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
                 {product.category}
               </span>
               <StatusBadge status={product.availableStock} type="stock" />
             </div>
 
-            {/* Product Name */}
-            <h1 style={{
-              fontFamily: 'var(--font-headline)',
-              fontSize: '1.625rem',
-              fontWeight: 800,
-              color: 'var(--slate-dark)',
-              lineHeight: 1.25,
-              marginBottom: '0.75rem',
-            }}>
+            <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight">
               {product.name}
             </h1>
+          </div>
 
-            {/* Price Card */}
-            <div style={{
-              padding: '1rem 1.25rem',
-              borderRadius: 'var(--radius-lg)',
-              background: '#ffffff',
-              border: '1px solid var(--border-hairline)',
-              marginBottom: '1rem',
-              boxShadow: 'var(--shadow-sm)',
-            }}>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                Direct Unit Price
-              </span>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.25rem' }}>
-                <span style={{
-                  fontFamily: 'var(--font-headline)',
-                  fontSize: '1.875rem',
-                  fontWeight: 800,
-                  color: 'var(--slate-dark)',
-                }}>
+          {/* Pricing Panel */}
+          <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-5 space-y-3">
+            <div className="flex items-baseline justify-between">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                  Unit Specification Price
+                </span>
+                <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
                   {formatCurrency(product.price)}
-                </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  (all taxes included)
-                </span>
+                </div>
               </div>
+              {quantity > 1 && (
+                <div className="text-right">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                    Calculated Subtotal ({quantity}x)
+                  </span>
+                  <div className="text-xl font-bold font-mono text-cyan-400">
+                    <AnimatedNumber value={subtotal} format={(val) => formatCurrency(val)} />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Availability */}
-            <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: isOutOfStock ? 'var(--stock-out)' : 'var(--stock-in)' }}>
-                {isOutOfStock ? 'cancel' : 'check_circle'}
-              </span>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: isOutOfStock ? 'var(--stock-out-text)' : 'var(--stock-in-text)' }}>
-                {isOutOfStock ? 'Currently Out of Stock' : `${product.availableStock} Units Available for Immediate Dispatch`}
-              </span>
-            </div>
+            {/* Quantity Controller & Add to Cart */}
+            <div className="pt-3 border-t border-white/[0.06] flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Stepper */}
+              <div className="flex items-center justify-between sm:justify-start bg-[#070b14] border border-white/[0.08] rounded-xl p-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDecrement}
+                  disabled={quantity <= 1 || isOutOfStock}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="w-12 text-center font-mono font-bold text-sm text-white">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleIncrement}
+                  disabled={quantity >= maxAllowedQuantity || isOutOfStock}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
 
-            {/* Description */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--slate-dark)', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                Description
+              {/* Add to Cart Button */}
+              <Button
+                variant={isOutOfStock ? 'ghost' : 'glow'}
+                size="lg"
+                disabled={isOutOfStock || adding}
+                isLoading={adding}
+                onClick={handleAddToCart}
+                className="flex-1 text-sm font-mono tracking-wider font-bold"
+                iconLeft={<ShoppingBag className="w-4 h-4" />}
+              >
+                {isOutOfStock ? 'OUT OF STOCK' : `ADD TO CART — ${formatCurrency(subtotal)}`}
+              </Button>
+            </div>
+          </div>
+
+          {/* Description */}
+          {product.description && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                Component Overview
               </h3>
-              <p style={{ color: '#475569', fontSize: '0.9375rem', lineHeight: 1.6 }}>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-body">
                 {product.description}
               </p>
             </div>
-
-            {/* Quantity Selector Section */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-dark)', marginBottom: '0.5rem', display: 'block' }}>
-                Quantity:
-              </label>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                {/* Stepper with Large Touch Targets (Min 44px) */}
-                <div className="touch-stepper">
-                  <button
-                    type="button"
-                    onClick={handleDecrement}
-                    disabled={quantity <= 1 || isOutOfStock}
-                    aria-label="Decrease quantity"
-                  >
-                    -
-                  </button>
-                  <span className="stepper-value">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleIncrement}
-                    disabled={quantity >= maxAllowedQuantity || isOutOfStock}
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                  Total: <strong>{formatCurrency(product.price * quantity)}</strong>
-                </span>
-              </div>
-            </div>
-
-            {/* Desktop Add to Cart Button */}
-            <div className="desktop-only" style={{ marginBottom: '1.5rem' }}>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || adding}
-                className="btn-primary"
-                style={{ width: '100%', padding: '0.875rem 1.5rem', fontSize: '1rem', minHeight: '48px' }}
-              >
-                <span className="material-symbols-outlined">add_shopping_cart</span>
-                {adding
-                  ? 'Validating Stock...'
-                  : isOutOfStock
-                  ? 'Out of Stock'
-                  : `Add ${quantity} Unit(s) to Cart — ${formatCurrency(product.price * quantity)}`}
-              </button>
-            </div>
-
-            {/* Feedback Alert */}
-            {feedback && (
-              <div style={{
-                padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.875rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: feedback.type === 'success' ? 'var(--stock-in-bg)' : 'var(--stock-out-bg)',
-                color: feedback.type === 'success' ? 'var(--stock-in-text)' : 'var(--stock-out-text)',
-                border: `1px solid ${feedback.type === 'success' ? 'var(--stock-in-border)' : 'var(--stock-out-border)'}`,
-                marginBottom: '1.5rem',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                  {feedback.type === 'success' ? 'check_circle' : 'error'}
-                </span>
-                <span>{feedback.text}</span>
-                {feedback.type === 'success' && (
-                  <Link
-                    to="/cart"
-                    style={{
-                      marginLeft: 'auto',
-                      fontWeight: 700,
-                      textDecoration: 'underline',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    View Cart →
-                  </Link>
-                )}
-              </div>
-            )}
-
-            {/* Hardware Specification Sheet */}
-            {product.specs && (
-              <div style={{
-                background: '#ffffff',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-hairline)',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <div style={{
-                  background: 'var(--card-subtle)',
-                  padding: '0.75rem 1rem',
-                  borderBottom: '1px solid var(--border-hairline)',
-                  fontWeight: 700,
-                  fontSize: '0.8125rem',
-                  color: 'var(--slate-dark)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)' }}>
-                    description
-                  </span>
-                  Hardware Specifications
-                </div>
-
-                <div style={{ padding: '0.25rem 1rem' }}>
-                  {Object.entries(product.specs).map(([key, val]) => {
-                    if (!val) return null;
-                    const formattedVal = Array.isArray(val) ? val.join(', ') : val;
-                    const label = key
-                      .replace(/([A-Z])/g, ' $1')
-                      .replace(/^./, (str) => str.toUpperCase());
-
-                    return (
-                      <div
-                        key={key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.5rem 0',
-                          borderBottom: '1px solid #f1f5f9',
-                          fontSize: '0.8125rem',
-                        }}
-                      >
-                        <span style={{ color: 'var(--text-muted)' }}>{label}</span>
-                        <span style={{ fontWeight: 600, color: 'var(--slate-dark)', fontFamily: 'monospace' }}>
-                          {formattedVal}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================
-          MOBILE STICKY BOTTOM ACTION BAR (Requirement 5)
-          Large tap button (min 48px), total amount & Add to Cart
-          ============================================================ */}
-      <div className="mobile-sticky-action-bar">
-        <div>
-          <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>
-            Total ({quantity} item)
-          </span>
-          <span style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '1.1875rem',
-            fontWeight: 800,
-            color: 'var(--slate-dark)',
-          }}>
-            {formatCurrency(product.price * quantity)}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={isOutOfStock || adding}
-          className="btn-primary"
-          style={{
-            flex: 1,
-            minHeight: '48px',
-            fontSize: '0.9375rem',
-            padding: '0.75rem 1rem',
-          }}
-          aria-label={`Add ${quantity} to cart`}
-        >
-          {adding ? (
-            <>
-              <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
-                sync
-              </span>
-              <span>Adding...</span>
-            </>
-          ) : isOutOfStock ? (
-            <span>Out of Stock</span>
-          ) : (
-            <>
-              <span className="material-symbols-outlined">add_shopping_cart</span>
-              <span>Add to Cart</span>
-            </>
           )}
-        </button>
+
+          {/* Technical Specifications Table */}
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+                  Hardware Specifications Datasheet
+                </h3>
+              </div>
+              <div className="bg-[#090d16] border border-white/[0.08] rounded-xl overflow-hidden font-mono text-xs">
+                {Object.entries(product.specifications).map(([key, val], idx) => (
+                  <div
+                    key={key}
+                    className={`flex items-center justify-between px-4 py-2.5 ${
+                      idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent'
+                    } border-b border-white/[0.04] last:border-0`}
+                  >
+                    <span className="text-slate-400 font-medium">{key}</span>
+                    <span className="text-cyan-300 font-bold">{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+
       </div>
+
     </div>
   );
 };

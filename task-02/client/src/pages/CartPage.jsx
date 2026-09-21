@@ -1,9 +1,27 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShoppingBag,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  Zap,
+  AlertCircle,
+  Cpu,
+  ArrowLeft,
+  Lock,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { checkoutService } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { AnimatedNumber } from '../components/animations/AnimatedNumber';
 
 export const CartPage = () => {
   const { cart, loading, updateQuantity, removeFromCart, resetCartAfterCheckout } = useCart();
@@ -18,7 +36,6 @@ export const CartPage = () => {
   const handleStartCheckout = async () => {
     if (isEmpty || checkingOut) return;
 
-    // Must be logged in to order/checkout
     if (!isAuthenticated) {
       navigate('/login?redirect=/cart&prompt=order');
       return;
@@ -28,7 +45,6 @@ export const CartPage = () => {
       setCheckingOut(true);
       setCheckoutError(null);
 
-      // Trigger checkout on server
       const res = await checkoutService.checkout(cart.cartId, {
         fullName: user?.name || 'Lead Hardware Engineer',
         email: user?.email || 'engineer@techloom.store',
@@ -38,14 +54,12 @@ export const CartPage = () => {
       });
 
       if (res.success && res.order) {
-        // Reset active cart in local storage
         await resetCartAfterCheckout();
-        // Route customer to checkout reservation view
         navigate(`/checkout/${res.order.orderId}`);
       }
     } catch (err) {
       console.error('Checkout error:', err);
-      const msg = err.response?.data?.message || 'Failed to start checkout. Check inventory availability.';
+      const msg = err.response?.data?.message || 'Failed to initialize checkout. Check inventory availability.';
       setCheckoutError(msg);
     } finally {
       setCheckingOut(false);
@@ -54,382 +68,232 @@ export const CartPage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
-          progress_activity
-        </span>
-        <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)' }}>Calculating cart totals...</p>
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-spin mb-4">
+          <Cpu className="w-6 h-6" />
+        </div>
+        <p className="text-xs font-mono text-slate-400">Synchronizing hardware allocation queue...</p>
       </div>
     );
   }
 
   return (
-    <div className={isEmpty ? 'has-mobile-nav' : 'has-sticky-action'} style={{ padding: '1.5rem 0 3rem 0' }}>
-      <div className="container" style={{ maxWidth: '960px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <span style={{
-            fontSize: '0.6875rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: 'var(--primary)',
-            display: 'block',
-          }}>
-            Allocation Queue
-          </span>
-          <h1 style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '1.5rem',
-            fontWeight: 800,
-            color: 'var(--slate-dark)',
-          }}>
-            Shopping Cart ({cart?.itemCount || 0})
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 mb-8 border-b border-white/[0.08]">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest mb-1">
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Hardware Allocation Queue</span>
+          </div>
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Active Cart Matrix ({cart?.itemCount || 0})
           </h1>
         </div>
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-400 hover:text-cyan-300"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Continue Sourcing</span>
+        </Link>
+      </div>
 
-        {/* Error Alert */}
-        {checkoutError && (
-          <div style={{
-            padding: '0.875rem 1rem',
-            borderRadius: 'var(--radius-lg)',
-            background: 'var(--stock-out-bg)',
-            border: '1px solid var(--stock-out-border)',
-            color: 'var(--stock-out-text)',
-            marginBottom: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>error</span>
-            <div>
-              <strong style={{ display: 'block', fontSize: '0.875rem' }}>Checkout Reservation Blocked</strong>
-              <span style={{ fontSize: '0.8125rem' }}>{checkoutError}</span>
-            </div>
+      {/* Error Banner */}
+      {checkoutError && (
+        <div className="bg-rose-500/15 border border-rose-500/40 rounded-2xl p-4 mb-6 flex items-start gap-3 text-rose-200">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <div className="text-xs font-mono space-y-0.5">
+            <p className="font-bold text-white">Checkout Allocation Blocked</p>
+            <p>{checkoutError}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Empty State (Requirement 18) */}
-        {isEmpty ? (
-          <div style={{
-            background: 'var(--card)',
-            borderRadius: 'var(--radius-xl)',
-            border: '1px solid var(--border-hairline)',
-            padding: '4rem 1.5rem',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow-sm)',
-          }}>
-            <div style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              background: 'var(--card-subtle)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-subtle)',
-              marginBottom: '1rem',
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '40px' }}>
-                remove_shopping_cart
-              </span>
-            </div>
-            <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--slate-dark)' }}>
-              Your cart is empty.
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.375rem', maxWidth: '360px', margin: '0.375rem auto 1.5rem' }}>
-              Explore our microcontrollers, sensors, and development boards to start building.
-            </p>
-            <Link
-              to="/products"
-              className="btn-primary"
-              style={{ padding: '0.75rem 1.75rem', minHeight: '44px', fontSize: '0.9375rem' }}
-            >
-              Browse Products
+      {/* Empty State */}
+      {isEmpty ? (
+        <div className="bg-[#0a0f1d] border border-white/[0.08] rounded-3xl p-12 text-center max-w-lg mx-auto space-y-4 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto">
+            <ShoppingBag className="w-8 h-8" />
+          </div>
+          <h2 className="font-display font-bold text-xl text-white">Your Cart Matrix is Empty</h2>
+          <p className="text-xs font-mono text-slate-400 max-w-sm mx-auto leading-relaxed">
+            No silicon chips or development modules allocated yet. Browse our verified hardware directory to begin.
+          </p>
+          <div className="pt-2">
+            <Link to="/products">
+              <Button variant="primary" size="md" iconRight={<ArrowRight className="w-4 h-4" />}>
+                Explore Components
+              </Button>
             </Link>
           </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1.5rem',
-            alignItems: 'start',
-          }}>
-            {/* ============================================================
-                ITEMIZED CART CARDS (Requirement 6: No large desktop tables)
-                ============================================================ */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Items List */}
+          <div className="lg:col-span-8 space-y-4">
+            <AnimatePresence>
               {items.map((item) => (
-                <div
-                  key={item.productId}
-                  className="spec-card"
-                  style={{
-                    padding: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                  }}
+                <motion.div
+                  key={item.product._id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-[#0d1527]/80 backdrop-blur-xl border border-white/[0.08] hover:border-cyan-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
                 >
-                  {/* Top Row: Thumbnail, Name, Unit Price, Remove Button */}
-                  <div style={{ display: 'flex', gap: '0.875rem', alignItems: 'flex-start' }}>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      style={{
-                        width: '68px',
-                        height: '68px',
-                        borderRadius: 'var(--radius-md)',
-                        objectFit: 'cover',
-                        border: '1px solid var(--border-hairline)',
-                        background: '#f8fafc',
-                        flexShrink: 0,
-                      }}
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
-                      }}
-                    />
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Link
-                        to={`/products/${item.productId}`}
-                        style={{
-                          fontWeight: 700,
-                          fontSize: '0.9375rem',
-                          color: 'var(--slate-dark)',
-                          lineHeight: 1.3,
-                          display: 'block',
-                          marginBottom: '0.25rem',
+                  {/* Left: Thumbnail & Details */}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <Link
+                      to={`/products/${item.product._id}`}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#070b14] border border-white/[0.08] overflow-hidden shrink-0 block"
+                    >
+                      <img
+                        src={item.product.image}
+                        alt={item.product.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
                         }}
+                      />
+                    </Link>
+
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider block">
+                        {item.product.category}
+                      </span>
+                      <Link
+                        to={`/products/${item.product._id}`}
+                        className="font-display font-bold text-sm sm:text-base text-white hover:text-cyan-300 transition-colors line-clamp-1 block"
                       >
-                        {item.name}
+                        {item.product.name}
                       </Link>
-                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                        Unit: {formatCurrency(item.price)}
+                      <span className="text-xs font-mono text-slate-400 mt-1 block">
+                        {formatCurrency(item.product.price)} each
                       </span>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => removeFromCart(item.productId)}
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--text-subtle)',
-                        background: 'var(--card-subtle)',
-                        flexShrink: 0,
-                      }}
-                      aria-label={`Remove ${item.name} from cart`}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                        delete
-                      </span>
-                    </button>
                   </div>
 
-                  {/* Bottom Row: Stepper and Subtotal */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingTop: '0.5rem',
-                    borderTop: '1px solid var(--border-hairline)',
-                  }}>
-                    {/* Stepper (Min 44px tap targets) */}
-                    <div className="touch-stepper">
+                  {/* Right: Quantity Stepper & Subtotal */}
+                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
+                    {/* Stepper */}
+                    <div className="flex items-center bg-[#070b14] border border-white/[0.08] rounded-xl p-1">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                        aria-label="Decrease quantity"
+                        onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
                       >
-                        -
+                        <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="stepper-value">
+                      <span className="w-8 text-center font-mono font-bold text-xs text-white">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        aria-label="Increase quantity"
+                        onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
+                        disabled={item.quantity >= item.product.availableStock}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                       >
-                        +
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
                     {/* Subtotal */}
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
-                        Subtotal
-                      </span>
-                      <span style={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '1rem',
-                        color: 'var(--slate-dark)',
-                      }}>
-                        {formatCurrency(item.subtotal)}
+                    <div className="text-right min-w-[80px]">
+                      <span className="font-mono font-bold text-sm sm:text-base text-white">
+                        {formatCurrency(item.product.price * item.quantity)}
                       </span>
                     </div>
+
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.product._id)}
+                      title="Remove component"
+                      className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Order Summary Rail */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-6 shadow-2xl space-y-4">
+              <h2 className="font-display font-bold text-base text-white uppercase tracking-wider border-b border-white/[0.08] pb-3">
+                Order Telemetry
+              </h2>
+
+              <div className="space-y-2.5 font-mono text-xs text-slate-300">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Total Items:</span>
+                  <span className="text-white font-bold">{cart?.itemCount || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Fulfillment:</span>
+                  <span className="text-emerald-400">Complimentary Courier</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Reservation Duration:</span>
+                  <span className="text-cyan-400">5 Minutes (Guaranteed)</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/[0.08] flex items-baseline justify-between">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                    Calculated Total
+                  </span>
+                  <div className="text-2xl font-black font-mono text-white tracking-tight">
+                    <AnimatedNumber
+                      value={cart?.totalAmount || 0}
+                      format={(v) => formatCurrency(v)}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* ============================================================
-                PRICING SUMMARY CARD
-                ============================================================ */}
-            <div style={{
-              background: 'var(--card)',
-              borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-hairline)',
-              padding: '1.25rem',
-              boxShadow: 'var(--shadow-sm)',
-            }}>
-              <h3 style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: 'var(--slate-dark)',
-                marginBottom: '1rem',
-              }}>
-                Order Summary
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <span>Subtotal:</span>
-                  <span style={{ fontWeight: 600, color: 'var(--slate-dark)' }}>{formatCurrency(cart?.subtotal)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <span>Taxes & Hardware Excise:</span>
-                  <span style={{ fontWeight: 600, color: 'var(--stock-in)' }}>Included</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <span>Express Logistics (India):</span>
-                  <span style={{ fontWeight: 600, color: 'var(--stock-in)' }}>FREE</span>
-                </div>
-
-                <div style={{
-                  paddingTop: '0.75rem',
-                  marginTop: '0.25rem',
-                  borderTop: '1px solid var(--border-hairline)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'baseline',
-                }}>
-                  <strong style={{ fontSize: '1rem', color: 'var(--slate-dark)' }}>Total:</strong>
-                  <span style={{
-                    fontFamily: 'var(--font-headline)',
-                    fontSize: '1.5rem',
-                    fontWeight: 800,
-                    color: 'var(--primary)',
-                  }}>
-                    {formatCurrency(cart?.total)}
-                  </span>
-                </div>
+                <Badge variant="primary" size="sm">
+                  AUDITED
+                </Badge>
               </div>
 
-              {/* Stock Reservation Notice */}
-              <div style={{
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--card-subtle)',
-                border: '1px solid var(--border-hairline)',
-                fontSize: '0.75rem',
-                color: 'var(--text-muted)',
-                marginBottom: '1rem',
-                display: 'flex',
-                gap: '0.5rem',
-                alignItems: 'flex-start',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)', marginTop: '2px' }}>
-                  lock_clock
-                </span>
-                <span>
-                  Proceeding to checkout holds inventory for <strong>5 minutes</strong> to guarantee allocation.
-                </span>
-              </div>
+              {/* Checkout Button */}
+              <Button
+                size="lg"
+                variant="glow"
+                className="w-full font-mono tracking-wider font-bold text-sm"
+                disabled={checkingOut}
+                isLoading={checkingOut}
+                onClick={handleStartCheckout}
+                iconRight={<ArrowRight className="w-4 h-4" />}
+              >
+                {isAuthenticated ? 'LOCK INVENTORY & CHECKOUT' : 'SIGN IN TO CHECKOUT'}
+              </Button>
 
-              {/* Desktop Checkout CTA */}
-              <div className="desktop-only">
-                <button
-                  type="button"
-                  onClick={handleStartCheckout}
-                  disabled={isEmpty || checkingOut}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '0.875rem', fontSize: '1rem', minHeight: '48px' }}
-                >
-                  {checkingOut ? (
-                    <>
-                      <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
-                        sync
-                      </span>
-                      <span>Reserving Stock...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Proceed to Checkout</span>
-                      <span className="material-symbols-outlined">arrow_forward</span>
-                    </>
-                  )}
-                </button>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono text-slate-500 pt-1">
+                <Lock className="w-3 h-3 text-cyan-400" />
+                <span>Idempotency-Shielded Transaction</span>
               </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* ============================================================
-          STICKY BOTTOM ACTION BAR (Requirement 6)
-          Subtotal / Total + Proceed to Checkout
-          ============================================================ */}
-      {!isEmpty && (
-        <div className="mobile-sticky-action-bar">
-          <div>
-            <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>
-              Total Payable
-            </span>
-            <span style={{
-              fontFamily: 'var(--font-headline)',
-              fontSize: '1.1875rem',
-              fontWeight: 800,
-              color: 'var(--primary)',
-            }}>
-              {formatCurrency(cart?.total)}
-            </span>
+            {/* Architecture Card */}
+            <div className="bg-[#0a0f1d] border border-white/[0.06] rounded-xl p-4 flex items-start gap-3">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-slate-400 leading-relaxed font-mono">
+                <strong className="text-white block mb-0.5">Automated Stock Lock:</strong>
+                Clicking checkout reserves these items for exactly 300 seconds so no other user can purchase them while you enter payment details.
+              </div>
+            </div>
+
           </div>
 
-          <button
-            type="button"
-            onClick={handleStartCheckout}
-            disabled={isEmpty || checkingOut}
-            className="btn-primary"
-            style={{
-              flex: 1,
-              minHeight: '48px',
-              fontSize: '0.9375rem',
-              padding: '0.75rem 1rem',
-            }}
-          >
-            {checkingOut ? (
-              <>
-                <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>
-                  sync
-                </span>
-                <span>Reserving...</span>
-              </>
-            ) : (
-              <>
-                <span>Proceed to Checkout</span>
-                <span className="material-symbols-outlined">arrow_forward</span>
-              </>
-            )}
-          </button>
         </div>
       )}
+
     </div>
   );
 };

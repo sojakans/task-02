@@ -1,7 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  Filter,
+  SlidersHorizontal,
+  X,
+  RotateCcw,
+  Check,
+  Cpu,
+  Layers,
+  Sparkles,
+  ArrowUpDown,
+  DollarSign,
+  AlertCircle,
+  Package,
+} from 'lucide-react';
 import { productService } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
+import { StaggerGrid, StaggerItem } from '../components/animations/StaggerGrid';
+import { ProductCardSkeleton } from '../components/ui/Skeleton';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
 
 const CATEGORIES = ['All', 'Microcontrollers', 'Sensors', 'Displays', 'Robotics'];
 
@@ -74,7 +95,6 @@ export const ProductsPage = () => {
 
   const handleClearSearch = () => {
     setSearch('');
-    // Trigger immediate fetch with empty search
     setTimeout(() => fetchProducts(), 0);
   };
 
@@ -111,359 +131,316 @@ export const ProductsPage = () => {
   };
 
   // Count active filters for badge
-  const activeFilterCount = (category !== 'All' ? 1 : 0) +
+  const activeFilterCount =
+    (category !== 'All' ? 1 : 0) +
     (minPrice !== '' || maxPrice !== '' ? 1 : 0) +
     (availableOnly ? 1 : 0);
 
   return (
-    <div style={{ padding: '1.5rem 0 5rem 0' }}>
-      <div className="container">
-        {/* ============================================================
-            PAGE HEADER & SEARCH BAR
-            ============================================================ */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <div className="desktop-only" style={{ marginBottom: '1rem' }}>
-            <span style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: 'var(--primary)',
-              display: 'block',
-              marginBottom: '0.25rem',
-            }}>
-              Discovery Engine
-            </span>
-            <h1 style={{
-              fontFamily: 'var(--font-headline)',
-              fontSize: '2rem',
-              fontWeight: 800,
-              color: 'var(--slate-dark)',
-            }}>
-              Hardware Components Catalog
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', marginTop: '0.25rem' }}>
-              Parametric search across microcontrollers, sensor packages, and robotics modules.
-            </p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 mb-8 border-b border-white/[0.08]">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest mb-1">
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Silicon Catalog</span>
           </div>
-
-          {/* Large Full-Width Search Input (Requirement 3) */}
-          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', marginBottom: '1rem' }}>
-            <span
-              className="material-symbols-outlined"
-              style={{
-                position: 'absolute',
-                left: '0.875rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-subtle)',
-                fontSize: '22px',
-                pointerEvents: 'none',
-              }}
-            >
-              search
-            </span>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                paddingLeft: '2.75rem',
-                paddingRight: search ? '4.5rem' : '1rem',
-                fontSize: '0.9375rem',
-                borderRadius: 'var(--radius-md)',
-                height: '46px',
-              }}
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                style={{
-                  position: 'absolute',
-                  right: '3rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-subtle)',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                aria-label="Clear Search Text"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  close
-                </span>
-              </button>
-            )}
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{
-                position: 'absolute',
-                right: '0.375rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                padding: '0.35rem 0.75rem',
-                fontSize: '0.8125rem',
-                height: '36px',
-              }}
-            >
-              Search
-            </button>
-          </form>
-
-          {/* Horizontally Scrollable Category Chips (Mobile Requirement 2) */}
-          <div className="mobile-only" style={{ marginBottom: '1rem' }}>
-            <div className="category-chips-bar">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  className={`chip-item ${category === cat ? 'active' : ''}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile Toolbar: [ Filter ] button + Sort dropdown + Results Count */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.75rem',
-            padding: '0.75rem 1rem',
-            background: 'var(--card)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-hairline)',
-            boxShadow: 'var(--shadow-sm)',
-          }}>
-            {/* Mobile Filter Sheet Trigger Button (Requirement 4) */}
-            <div className="mobile-only">
-              <button
-                type="button"
-                onClick={handleOpenFilterSheet}
-                className="btn-secondary"
-                style={{
-                  padding: '0.45rem 0.875rem',
-                  fontSize: '0.8125rem',
-                  minHeight: '38px',
-                  borderRadius: 'var(--radius-md)',
-                  position: 'relative',
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)' }}>
-                  tune
-                </span>
-                <span>Filter</span>
-                {activeFilterCount > 0 && (
-                  <span style={{
-                    background: 'var(--primary)',
-                    color: '#ffffff',
-                    fontSize: '0.6875rem',
-                    fontWeight: 700,
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '0.25rem',
-                  }}>
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Results Count */}
-            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-              <strong>{products.length}</strong> items
-            </div>
-
-            {/* Sort Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <span className="desktop-only" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                Sort:
-              </span>
-              <select
-                className="input-field"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                style={{
-                  padding: '0.35rem 0.6rem',
-                  fontSize: '0.8125rem',
-                  width: 'auto',
-                  minHeight: '38px',
-                }}
-              >
-                <option value="newest">Newest</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="name_asc">Name: A–Z</option>
-                <option value="stock_desc">Highest Stock</option>
-              </select>
-            </div>
-          </div>
+          <h1 className="font-display text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Hardware Inventory Matrix
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 font-mono">
+            {totalCount} active items synchronized with real-time stock allocation
+          </p>
         </div>
 
-        {/* ============================================================
-            MAIN CONTENT: DESKTOP SIDEBAR + RESPONSIVE PRODUCT GRID
-            ============================================================ */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gap: '1.5rem',
-          alignItems: 'start',
-        }}>
-          {/* Main Grid Area */}
-          <main>
-            {/* Loading Skeletons */}
-            {loading ? (
-              <div className="mobile-2col-grid">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
-                  <div key={idx} className="spec-card" style={{ padding: '0.75rem' }}>
-                    <div className="skeleton-box" style={{ width: '100%', aspectRatio: '4/3', marginBottom: '0.5rem' }} />
-                    <div className="skeleton-box" style={{ width: '40%', height: '10px', marginBottom: '0.5rem' }} />
-                    <div className="skeleton-box" style={{ width: '90%', height: '14px', marginBottom: '0.5rem' }} />
-                    <div className="skeleton-box" style={{ width: '60%', height: '18px', marginBottom: '0.75rem' }} />
-                    <div className="skeleton-box" style={{ width: '100%', height: '38px', borderRadius: '6px' }} />
-                  </div>
-                ))}
-              </div>
-            ) : error ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '3rem 1.5rem',
-                background: 'var(--stock-out-bg)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--stock-out-border)',
-                color: 'var(--stock-out-text)',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '36px' }}>error</span>
-                <p style={{ marginTop: '0.5rem', fontWeight: 600 }}>{error}</p>
-                <button onClick={fetchProducts} className="btn-secondary" style={{ marginTop: '1rem' }}>
-                  Retry Query
-                </button>
-              </div>
-            ) : products.length === 0 ? (
-              /* No-Results State (Requirement 3 & 18) */
-              <div style={{
-                textAlign: 'center',
-                padding: '4rem 1.5rem',
-                background: 'var(--card)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-hairline)',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-subtle)' }}>
-                  search_off
-                </span>
-                <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginTop: '0.75rem', color: 'var(--slate-dark)' }}>
-                  No products found
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem', maxWidth: '360px', margin: '0.25rem auto 1.25rem' }}>
-                  No hardware matches your search "{search}". Try clearing search or resetting filters.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="btn-primary"
-                  style={{ padding: '0.625rem 1.25rem' }}
-                >
-                  Clear Search & Filters
-                </button>
-              </div>
-            ) : (
-              /* 2-Column Mobile Grid (Requirement 2) */
-              <div className="mobile-2col-grid">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
-            )}
-          </main>
+        {/* Mobile Filter Button */}
+        <div className="flex lg:hidden items-center gap-2">
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={handleOpenFilterSheet}
+            className="flex-1"
+            iconLeft={<SlidersHorizontal className="w-4 h-4 text-cyan-400" />}
+          >
+            Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          </Button>
         </div>
       </div>
 
-      {/* ============================================================
-          MOBILE BOTTOM SHEET FILTER MODAL (Requirement 4)
-          ============================================================ */}
-      {filterSheetOpen && (
-        <div className="bottom-sheet-overlay" onClick={() => setFilterSheetOpen(false)}>
-          <div
-            className="bottom-sheet-panel"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="filter-heading"
-          >
-            {/* Grab handle */}
-            <div className="bottom-sheet-handle" />
-
-            {/* Sheet Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--border-hairline)',
-            }}>
-              <h3 id="filter-heading" style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: '1.125rem',
-                fontWeight: 700,
-                color: 'var(--slate-dark)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--primary)' }}>
-                  tune
-                </span>
-                Filter Products
-              </h3>
+      {/* Main Layout Grid: Sidebar Filters (desktop) + Product Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ============================================================
+            DESKTOP FILTER SIDEBAR
+            ============================================================ */}
+        <aside className="hidden lg:block lg:col-span-3 bg-[#0a0f1d]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 sticky top-24 space-y-6">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+              <span className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                Filter Matrix
+              </span>
+            </div>
+            {activeFilterCount > 0 && (
               <button
-                type="button"
-                onClick={() => setFilterSheetOpen(false)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--text-muted)',
-                }}
-                aria-label="Close filters"
+                onClick={handleResetFilters}
+                className="text-xs font-mono text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                  close
-                </span>
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
               </button>
+            )}
+          </div>
+
+          {/* Search Box */}
+          <form onSubmit={handleSearchSubmit} className="space-y-2">
+            <label className="text-xs font-mono uppercase font-bold text-slate-400 block">
+              Search Inventory
+            </label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="SKU, keyword, model..."
+                className="w-full bg-[#070b14] border border-white/[0.08] focus:border-cyan-500/60 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 outline-none font-mono"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Categories Radio/List */}
+          <div className="space-y-2.5">
+            <label className="text-xs font-mono uppercase font-bold text-slate-400 block">
+              Hardware Category
+            </label>
+            <div className="space-y-1">
+              {CATEGORIES.map((cat) => {
+                const isSelected = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCategory(cat)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-mono transition-all text-left cursor-pointer ${
+                      isSelected
+                        ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-bold'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Price Range Filter */}
+          <div className="space-y-2.5 pt-2 border-t border-white/[0.06]">
+            <label className="text-xs font-mono uppercase font-bold text-slate-400 block">
+              Price Range ($)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                placeholder="Min ($)"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full bg-[#070b14] border border-white/[0.08] focus:border-cyan-500/60 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none font-mono"
+              />
+              <input
+                type="number"
+                placeholder="Max ($)"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full bg-[#070b14] border border-white/[0.08] focus:border-cyan-500/60 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Availability Toggle */}
+          <div className="pt-2 border-t border-white/[0.06]">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={availableOnly}
+                onChange={(e) => setAvailableOnly(e.target.checked)}
+                className="sr-only"
+              />
+              <div
+                className={`w-9 h-5 rounded-full transition-colors relative ${
+                  availableOnly ? 'bg-cyan-500' : 'bg-slate-800 border border-white/10'
+                }`}
+              >
+                <div
+                  className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 transition-transform ${
+                    availableOnly ? 'left-4' : 'left-1'
+                  }`}
+                />
+              </div>
+              <span className="text-xs font-mono text-slate-300">In-Stock Items Only</span>
+            </label>
+          </div>
+
+        </aside>
+
+        {/* ============================================================
+            PRODUCT MATRIX COLUMN
+            ============================================================ */}
+        <main className="lg:col-span-9 space-y-6">
+          
+          {/* Controls Bar: Search & Sort for mobile/desktop */}
+          <div className="bg-[#0a0f1d]/70 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            
+            {/* Active filter pills */}
+            <div className="flex flex-wrap items-center gap-2">
+              {category !== 'All' && (
+                <Badge variant="primary" size="sm" className="gap-1 cursor-pointer" onClick={() => setCategory('All')}>
+                  <span>Category: {category}</span>
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {(minPrice || maxPrice) && (
+                <Badge
+                  variant="info"
+                  size="sm"
+                  className="gap-1 cursor-pointer"
+                  onClick={() => {
+                    setMinPrice('');
+                    setMaxPrice('');
+                  }}
+                >
+                  <span>Price: ${minPrice || 0} - ${maxPrice || '∞'}</span>
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {availableOnly && (
+                <Badge variant="success" size="sm" className="gap-1 cursor-pointer" onClick={() => setAvailableOnly(false)}>
+                  <span>In-Stock Only</span>
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {activeFilterCount === 0 && (
+                <span className="text-xs font-mono text-slate-400">Showing all components</span>
+              )}
             </div>
 
-            {/* Sheet Body (Scrollable) */}
-            <div style={{ padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Category */}
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <ArrowUpDown className="w-4 h-4 text-cyan-400 shrink-0" />
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="bg-[#070b14] border border-white/[0.08] text-xs font-mono text-slate-200 rounded-xl px-3 py-2 outline-none focus:border-cyan-500/60 cursor-pointer"
+              >
+                <option value="newest">Sort: Newest Arrival</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* Grid or Error State */}
+          {error ? (
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-6 text-center space-y-3">
+              <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+              <p className="text-xs font-mono text-rose-300">{error}</p>
+              <Button size="sm" variant="secondary" onClick={fetchProducts}>
+                Retry Fetch
+              </Button>
+            </div>
+          ) : loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <StaggerGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map((product) => (
+                <StaggerItem key={product._id}>
+                  <ProductCard product={product} />
+                </StaggerItem>
+              ))}
+            </StaggerGrid>
+          ) : (
+            <div className="text-center py-20 bg-[#0a0f1d] border border-white/[0.08] rounded-2xl p-8 space-y-4">
+              <Package className="w-12 h-12 text-slate-600 mx-auto" />
+              <h3 className="font-display font-bold text-lg text-white">No hardware matched criteria</h3>
+              <p className="text-xs font-mono text-slate-400 max-w-sm mx-auto">
+                Try widening your price range or clearing search keywords.
+              </p>
+              <Button size="sm" variant="primary" onClick={handleResetFilters}>
+                Clear All Filters
+              </Button>
+            </div>
+          )}
+
+        </main>
+
+      </div>
+
+      {/* ============================================================
+          MOBILE BOTTOM SHEET FILTER MODAL
+          ============================================================ */}
+      <AnimatePresence>
+        {filterSheetOpen && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setFilterSheetOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-[#0d1527] border-t border-white/[0.1] rounded-t-3xl p-6 space-y-6 z-10 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+                  <span className="font-display font-bold text-base text-white">
+                    Filter Hardware
+                  </span>
+                </div>
+                <button
+                  onClick={() => setFilterSheetOpen(false)}
+                  className="p-1 text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Category selector */}
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--slate-dark)', marginBottom: '0.5rem', display: 'block' }}>
+                <label className="text-xs font-mono uppercase font-bold text-slate-400 block mb-2">
                   Category
                 </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div className="grid grid-cols-2 gap-2">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
-                      type="button"
                       onClick={() => setTempCategory(cat)}
-                      className={`chip-item ${tempCategory === cat ? 'active' : ''}`}
-                      style={{ padding: '0.5rem 1rem' }}
+                      className={`px-3 py-2 rounded-xl text-xs font-mono text-left ${
+                        tempCategory === cat
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                          : 'bg-slate-900/60 text-slate-400 border border-white/[0.06]'
+                      }`}
                     >
                       {cat}
                     </button>
@@ -471,85 +448,56 @@ export const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Price Range */}
+              {/* Price inputs */}
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--slate-dark)', marginBottom: '0.5rem', display: 'block' }}>
-                  Price Range (₹)
+                <label className="text-xs font-mono uppercase font-bold text-slate-400 block mb-2">
+                  Price Limits ($)
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <input
-                      type="number"
-                      placeholder="Min Price"
-                      className="input-field"
-                      value={tempMinPrice}
-                      onChange={(e) => setTempMinPrice(e.target.value)}
-                    />
-                  </div>
-                  <span style={{ color: 'var(--text-subtle)', fontWeight: 700 }}>—</span>
-                  <div style={{ flex: 1 }}>
-                    <input
-                      type="number"
-                      placeholder="Max Price"
-                      className="input-field"
-                      value={tempMaxPrice}
-                      onChange={(e) => setTempMaxPrice(e.target.value)}
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={tempMinPrice}
+                    onChange={(e) => setTempMinPrice(e.target.value)}
+                    className="bg-[#070b14] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white font-mono outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={tempMaxPrice}
+                    onChange={(e) => setTempMaxPrice(e.target.value)}
+                    className="bg-[#070b14] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white font-mono outline-none"
+                  />
                 </div>
               </div>
 
               {/* Availability */}
-              <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--border-hairline)' }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  cursor: 'pointer',
-                  fontSize: '0.9375rem',
-                  fontWeight: 600,
-                  color: 'var(--slate-dark)',
-                  padding: '0.5rem 0',
-                }}>
+              <div className="pt-2">
+                <label className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={tempAvailableOnly}
                     onChange={(e) => setTempAvailableOnly(e.target.checked)}
-                    style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                    className="w-4 h-4 accent-cyan-500 rounded"
                   />
-                  <span>In Stock Only</span>
+                  <span className="text-xs font-mono text-slate-300">In-Stock Only</span>
                 </label>
               </div>
-            </div>
 
-            {/* Sticky Actions Footer */}
-            <div style={{
-              padding: '1rem 1.25rem',
-              borderTop: '1px solid var(--border-hairline)',
-              background: 'var(--card-subtle)',
-              display: 'flex',
-              gap: '0.75rem',
-            }}>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="btn-secondary"
-                style={{ flex: 1, minHeight: '46px', fontSize: '0.9375rem' }}
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleApplyFilters}
-                className="btn-primary"
-                style={{ flex: 2, minHeight: '46px', fontSize: '0.9375rem' }}
-              >
-                Apply Filters
-              </button>
-            </div>
+              {/* Action buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/[0.08]">
+                <Button variant="secondary" onClick={handleResetFilters}>
+                  Reset
+                </Button>
+                <Button variant="primary" onClick={handleApplyFilters}>
+                  Apply Filters
+                </Button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

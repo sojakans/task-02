@@ -1,17 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Cpu,
+  Search,
+  ShoppingBag,
+  User,
+  LogOut,
+  RefreshCw,
+  Menu,
+  X,
+  ChevronLeft,
+  Terminal,
+  Layers,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { seedService } from '../services/api';
+import { CartPulseBadge } from './animations/FlyToCart';
 
 const CATEGORIES = ['Microcontrollers', 'Sensors', 'Displays', 'Robotics'];
 
 export const Header = () => {
   const { itemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [reseedLoading, setReseedLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,792 +39,271 @@ export const Header = () => {
     } else {
       navigate('/products');
     }
-    setDrawerOpen(false);
+    setMobileMenuOpen(false);
   };
 
   const handleReseed = async () => {
-    if (confirm('Re-seed database with fresh hardware products?')) {
+    if (window.confirm('Reset and re-seed database with fresh hardware inventory?')) {
       try {
         setReseedLoading(true);
         await seedService.reseed();
-        alert('Database successfully re-seeded!');
-        window.location.reload();
+        toast.success('Inventory re-seeded with factory specifications!');
+        setTimeout(() => window.location.reload(), 1200);
       } catch (err) {
-        alert('Failed to reseed database: ' + err.message);
+        toast.error('Failed to reseed database: ' + err.message);
       } finally {
         setReseedLoading(false);
-        setDrawerOpen(false);
+        setMobileMenuOpen(false);
       }
     }
   };
 
-  // Determine context for mobile header
   const pathname = location.pathname;
   let mobileTitle = null;
   let showBack = false;
 
   if (pathname.startsWith('/products/')) {
-    mobileTitle = 'Product Details';
+    mobileTitle = 'Component Specs';
     showBack = true;
   } else if (pathname.startsWith('/checkout/')) {
-    mobileTitle = 'Checkout';
+    mobileTitle = 'Secure Checkout';
     showBack = true;
   } else if (pathname.startsWith('/payment/')) {
-    mobileTitle = 'Payment';
+    mobileTitle = 'Payment Gateway';
     showBack = true;
   } else if (pathname.startsWith('/orders/')) {
-    mobileTitle = 'Order Details';
+    mobileTitle = 'Telemetry & Logistics';
     showBack = true;
-  } else if (pathname.startsWith('/order-success/')) {
-    mobileTitle = 'Order Confirmed';
-    showBack = false;
   }
 
   return (
-    <>
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 80,
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-hairline)',
-        boxShadow: 'var(--shadow-sm)',
-      }}>
-        {/* ============================================================
-            MOBILE COMPACT HEADER (<769px)
-            ============================================================ */}
-        <div className="mobile-only" style={{ padding: '0 0.875rem' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: '3.5rem',
-            gap: '0.5rem',
-          }}>
-            {/* Left Action: Back button or Hamburger Drawer */}
-            {showBack ? (
+    <header className="sticky top-0 z-40 w-full bg-[#070b14]/80 backdrop-blur-2xl border-b border-white/[0.08] transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          
+          {/* Left: Brand Logo */}
+          <div className="flex items-center gap-6">
+            {showBack && (
               <button
-                type="button"
                 onClick={() => navigate(-1)}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--slate-dark)',
-                  background: 'var(--card-subtle)',
-                  border: '1px solid var(--border-hairline)',
-                }}
-                aria-label="Go Back"
+                className="md:hidden p-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.05]"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                  arrow_back
-                </span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(true)}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--slate-dark)',
-                  background: 'var(--card-subtle)',
-                  border: '1px solid var(--border-hairline)',
-                }}
-                aria-label="Open Menu"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
-                  menu
-                </span>
+                <ChevronLeft className="w-5 h-5" />
               </button>
             )}
 
-            {/* Center: Title or Logo */}
-            <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
-              {mobileTitle ? (
-                <h1 style={{
-                  fontFamily: 'var(--font-headline)',
-                  fontSize: '1.0625rem',
-                  fontWeight: 700,
-                  color: 'var(--slate-dark)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  padding: '0 0.5rem',
-                }}>
-                  {mobileTitle}
-                </h1>
-              ) : (
-                <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#38bdf8',
-                  }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                      memory
-                    </span>
-                  </div>
-                  <span style={{
-                    fontFamily: 'var(--font-headline)',
-                    fontSize: '1.1875rem',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    color: 'var(--slate-dark)',
-                  }}>
-                    Techloom
-                  </span>
-                  <span style={{
-                    fontSize: '0.625rem',
-                    fontWeight: 700,
-                    padding: '0.1rem 0.3rem',
-                    borderRadius: '3px',
-                    background: 'var(--primary-subtle)',
-                    color: 'var(--primary)',
-                    textTransform: 'uppercase',
-                  }}>
-                    Makers
-                  </span>
-                </Link>
-              )}
-            </div>
-
-            {/* Right Action: Cart */}
-            <Link
-              to="/cart"
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--slate-dark)',
-                background: 'var(--card-subtle)',
-                border: '1px solid var(--border-hairline)',
-                position: 'relative',
-              }}
-              aria-label="View Cart"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                shopping_bag
-              </span>
-              {itemCount > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '-3px',
-                    right: '-3px',
-                    minWidth: '18px',
-                    height: '18px',
-                    borderRadius: '9999px',
-                    background: 'var(--primary)',
-                    color: '#ffffff',
-                    fontSize: '0.625rem',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '0 4px',
-                    boxShadow: '0 2px 4px rgba(37,99,235,0.3)',
-                  }}
-                >
-                  {itemCount > 99 ? '99+' : itemCount}
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.25)] group-hover:border-cyan-400 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.45)] transition-all">
+                <Cpu className="w-5 h-5 text-cyan-400 transition-transform duration-300 group-hover:scale-110" />
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
                 </span>
-              )}
-            </Link>
-          </div>
-        </div>
-
-        {/* ============================================================
-            DESKTOP HEADER (>=769px) - Preserves existing desktop spec
-            ============================================================ */}
-        <div className="desktop-only container">
-          {/* Main Bar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: '4.5rem',
-            gap: '1.5rem',
-          }}>
-            {/* Logo & Navigation */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#38bdf8',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                    memory
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-headline)',
-                    fontSize: '1.375rem',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    color: 'var(--slate-dark)',
-                  }}>
-                    Techloom
-                  </span>
-                  <span style={{
-                    fontSize: '0.6875rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.06em',
-                    padding: '0.125rem 0.375rem',
-                    borderRadius: '4px',
-                    background: 'var(--primary-subtle)',
-                    color: 'var(--primary)',
-                    textTransform: 'uppercase',
-                  }}>
-                    Makers
-                  </span>
-                </div>
-              </Link>
-
-              <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Link
-                  to="/"
-                  style={{
-                    padding: '0.5rem 0.875rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    color: pathname === '/' ? 'var(--primary)' : 'var(--slate-dark)',
-                    background: pathname === '/' ? 'var(--primary-subtle)' : 'transparent',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/products"
-                  style={{
-                    padding: '0.5rem 0.875rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    color: pathname.startsWith('/products') ? 'var(--primary)' : 'var(--text-muted)',
-                    background: pathname.startsWith('/products') ? 'var(--primary-subtle)' : 'transparent',
-                    transition: 'color 0.15s',
-                  }}
-                >
-                  Products
-                </Link>
-                <Link
-                  to="/orders"
-                  style={{
-                    padding: '0.5rem 0.875rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    color: pathname.startsWith('/orders') ? 'var(--primary)' : 'var(--text-muted)',
-                    background: pathname.startsWith('/orders') ? 'var(--primary-subtle)' : 'transparent',
-                    transition: 'color 0.15s',
-                  }}
-                >
-                  My Orders
-                </Link>
-              </nav>
-            </div>
-
-            {/* Search Bar */}
-            <form
-              onSubmit={handleSearchSubmit}
-              style={{
-                flex: 1,
-                maxWidth: '480px',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  position: 'absolute',
-                  left: '0.75rem',
-                  color: 'var(--text-subtle)',
-                  fontSize: '20px',
-                  pointerEvents: 'none',
-                }}
-              >
-                search
-              </span>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Search products, microcontrollers, sensors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: '2.5rem', paddingRight: '4rem', background: 'var(--card-subtle)' }}
-              />
-              <button
-                type="submit"
-                style={{
-                  position: 'absolute',
-                  right: '0.5rem',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  background: '#ffffff',
-                  border: '1px solid var(--border-hairline)',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Search
-              </button>
-            </form>
-
-            {/* Actions & Profile */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {/* Seed Database utility */}
-              <button
-                onClick={handleReseed}
-                disabled={reseedLoading}
-                title="Reset sample hardware catalog"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: '0.375rem 0.625rem',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  background: 'var(--card-subtle)',
-                  color: 'var(--text-muted)',
-                  border: '1px solid var(--border-hairline)',
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
-                  sync
-                </span>
-                {reseedLoading ? 'Seeding...' : 'Reset Catalog'}
-              </button>
-
-              {/* Cart Link */}
-              <Link
-                to="/cart"
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.5rem',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--slate-dark)',
-                  background: 'var(--card-subtle)',
-                  transition: 'background 0.15s',
-                }}
-                title="Shopping Cart"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                  shopping_bag
-                </span>
-                {itemCount > 0 && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      right: '-4px',
-                      minWidth: '18px',
-                      height: '18px',
-                      borderRadius: '9999px',
-                      background: 'var(--primary)',
-                      color: '#ffffff',
-                      fontSize: '0.6875rem',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '0 4px',
-                    }}
-                  >
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
-
-              <div style={{ width: '1px', height: '24px', background: 'var(--border-hairline)' }} />
-
-              {/* Profile / Auth Button */}
-              {isAuthenticated ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                  <div
-                    title={user?.email}
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #0284c7 0%, #004ac6 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      fontSize: '0.8125rem',
-                    }}
-                  >
-                    {(user?.name || 'M').charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-dark)', lineHeight: 1.2 }}>
-                      {user?.name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={logout}
-                      style={{
-                        fontSize: '0.6875rem',
-                        color: 'var(--stock-out)',
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  className="btn-secondary"
-                  style={{
-                    padding: '0.45rem 0.875rem',
-                    fontSize: '0.8125rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.375rem',
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                    account_circle
-                  </span>
-                  <span>Sign In</span>
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Sub-bar / Telemetry Status (from Stitch layout) */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: '0.375rem',
-            paddingBottom: '0.375rem',
-            borderTop: '1px solid var(--border-hairline)',
-            fontSize: '0.75rem',
-            color: 'var(--text-muted)',
-            fontFamily: 'var(--font-body)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', color: 'var(--stock-in)', fontWeight: 600 }}>
-                <span className="pulse-dot" style={{ background: 'var(--stock-in)' }} />
-                Global Silicon Logistics Live
-              </span>
-              <span style={{ color: 'var(--border-focused)' }}>/</span>
-              <span>Microcontrollers, FPGAs, Telemetry Sensors</span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span>Express Dispatch within 4h</span>
-              <span style={{ color: 'var(--border-focused)' }}>•</span>
-              <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                5-Min Guaranteed Stock Lock
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ============================================================
-          MOBILE DRAWER (OFFCANVAS SLIDE-IN)
-          ============================================================ */}
-      {drawerOpen && (
-        <>
-          <div
-            className="mobile-drawer-overlay"
-            onClick={() => setDrawerOpen(false)}
-            aria-hidden="true"
-          />
-          <aside className="mobile-drawer" aria-label="Mobile Navigation Menu">
-            {/* Drawer Header */}
-            <div style={{
-              padding: '1.25rem 1rem',
-              borderBottom: '1px solid var(--border-hairline)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'var(--card-subtle)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#38bdf8',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                    memory
-                  </span>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--slate-dark)' }}>
-                    Techloom
-                  </div>
-                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-                    Silicon Logistics Engine
-                  </div>
-                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '50%',
-                  color: 'var(--text-muted)',
-                }}
-                aria-label="Close Menu"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
-                  close
+              <div className="flex flex-col">
+                <span className="font-display font-black text-lg tracking-wider text-white group-hover:text-cyan-300 transition-colors">
+                  TECH<span className="text-cyan-400">LOOM</span>
                 </span>
-              </button>
-            </div>
-
-            {/* User Info / Sign In block */}
-            <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-hairline)' }}>
-              {isAuthenticated ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #0284c7 0%, #004ac6 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                  }}>
-                    {(user?.name || 'M').charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--slate-dark)' }}>
-                      {user?.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {user?.email}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { logout(); setDrawerOpen(false); }}
-                    style={{ fontSize: '0.75rem', color: 'var(--stock-out)', fontWeight: 600 }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setDrawerOpen(false)}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '0.625rem', fontSize: '0.875rem' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                    account_circle
-                  </span>
-                  <span>Sign In to Account</span>
-                </Link>
-              )}
-            </div>
-
-            {/* Navigation Links */}
-            <nav style={{ padding: '0.75rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <Link
-                to="/"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontWeight: 600,
-                  fontSize: '0.9375rem',
-                  color: 'var(--slate-dark)',
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>
-                  home
+                <span className="text-[10px] tracking-widest text-slate-400 uppercase font-mono font-semibold -mt-1">
+                  Silicon Logistics
                 </span>
-                Home
-              </Link>
+              </div>
+            </Link>
+
+            {/* Desktop Categories Navigation */}
+            <nav className="hidden lg:flex items-center gap-1 pl-4 border-l border-white/[0.08]">
               <Link
                 to="/products"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontWeight: 600,
-                  fontSize: '0.9375rem',
-                  color: 'var(--slate-dark)',
-                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide font-mono transition-all ${
+                  pathname === '/products' && !location.search.includes('category=')
+                    ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                }`}
               >
-                <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>
-                  grid_view
-                </span>
-                All Products
+                ALL HARDWARE
               </Link>
-              <Link
-                to="/cart"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontWeight: 600,
-                  fontSize: '0.9375rem',
-                  color: 'var(--slate-dark)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>
-                    shopping_bag
-                  </span>
-                  Shopping Cart
-                </div>
-                {itemCount > 0 && (
-                  <span style={{
-                    background: 'var(--primary)',
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '0.1rem 0.5rem',
-                    borderRadius: '9999px',
-                  }}>
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                to="/orders"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontWeight: 600,
-                  fontSize: '0.9375rem',
-                  color: 'var(--slate-dark)',
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>
-                  receipt_long
-                </span>
-                Order History & Tracking
-              </Link>
+              {CATEGORIES.map((cat) => {
+                const isActive = location.search.includes(`category=${encodeURIComponent(cat)}`);
+                return (
+                  <Link
+                    key={cat}
+                    to={`/products?category=${encodeURIComponent(cat)}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide font-mono transition-all ${
+                      isActive
+                        ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {cat.toUpperCase()}
+                  </Link>
+                );
+              })}
             </nav>
+          </div>
 
-            {/* Categories Section */}
-            <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--border-hairline)' }}>
-              <div style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--text-muted)',
-                marginBottom: '0.5rem',
-              }}>
-                Categories
+          {/* Middle: Search Bar */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hidden md:flex flex-1 max-w-xs xl:max-w-sm relative items-center"
+          >
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search components, specs, SKUs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#0b1222]/90 border border-white/[0.08] hover:border-white/20 focus:border-cyan-500/60 rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-mono"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 text-slate-500 hover:text-slate-300"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Re-seed Database Action */}
+            <button
+              onClick={handleReseed}
+              disabled={reseedLoading}
+              title="Reset inventory to factory specs"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-slate-400 hover:text-cyan-400 bg-slate-900/60 hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/30 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${reseedLoading ? 'animate-spin text-cyan-400' : ''}`} />
+              <span className="hidden xl:inline">Reset Stock</span>
+            </button>
+
+            {/* Orders History Link */}
+            <Link
+              to="/orders"
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all ${
+                pathname === '/orders'
+                  ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Orders</span>
+            </Link>
+
+            {/* Cart Link */}
+            <Link
+              to="/cart"
+              className="relative flex items-center justify-center p-2.5 rounded-xl bg-slate-900/80 border border-white/[0.08] hover:border-cyan-500/40 text-slate-300 hover:text-cyan-400 transition-all shadow-sm"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <CartPulseBadge count={itemCount} />
+            </Link>
+
+            {/* Auth Button */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 pl-1">
+                <span className="hidden md:inline-block text-xs font-mono text-slate-400 truncate max-w-[100px]">
+                  {user?.name || user?.email?.split('@')[0]}
+                </span>
+                <button
+                  onClick={logout}
+                  title="Sign Out"
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold font-mono tracking-wider text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400 transition-all shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>SIGN IN</span>
+              </Link>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Mobile Drawer Navigation */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-[#0a0f1d] border-b border-white/[0.1] px-4 py-4 space-y-3 overflow-hidden"
+          >
+            {/* Mobile Search */}
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search components, specs, SKUs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#070b14] border border-white/[0.1] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500/60 font-mono"
+              />
+            </form>
+
+            <div className="pt-2">
+              <p className="text-[11px] font-mono uppercase text-slate-500 font-bold px-2 mb-1.5">
+                Hardware Categories
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Link
+                  to="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-lg text-xs font-mono font-medium text-slate-300 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08]"
+                >
+                  All Inventory
+                </Link>
                 {CATEGORIES.map((cat) => (
                   <Link
                     key={cat}
                     to={`/products?category=${encodeURIComponent(cat)}`}
-                    onClick={() => setDrawerOpen(false)}
-                    style={{
-                      padding: '0.5rem 0.75rem',
-                      fontSize: '0.875rem',
-                      color: 'var(--slate-dark)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      borderRadius: 'var(--radius-sm)',
-                    }}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-lg text-xs font-mono font-medium text-slate-300 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08]"
                   >
-                    <span>{cat}</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--text-subtle)' }}>
-                      chevron_right
-                    </span>
+                    {cat}
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* Reset DB utility */}
-            <div style={{ marginTop: 'auto', padding: '1rem', borderTop: '1px solid var(--border-hairline)' }}>
+            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
               <button
-                type="button"
                 onClick={handleReseed}
                 disabled={reseedLoading}
-                className="btn-secondary"
-                style={{ width: '100%', padding: '0.625rem', fontSize: '0.8125rem' }}
+                className="flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-cyan-400 px-2 py-1.5"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  sync
-                </span>
-                {reseedLoading ? 'Resetting Catalog...' : 'Reset Sample Catalog'}
+                <RefreshCw className={`w-3.5 h-3.5 ${reseedLoading ? 'animate-spin' : ''}`} />
+                <span>Reset Demo Stock</span>
               </button>
+              <Link
+                to="/orders"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-xs font-mono text-cyan-400 px-2 py-1.5"
+              >
+                Order History &rarr;
+              </Link>
             </div>
-          </aside>
-        </>
-      )}
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 };

@@ -1,77 +1,125 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Cpu, ShieldCheck, Clock, RefreshCw, Zap } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer style={{
-      background: 'var(--slate-dark)',
-      color: '#ffffff',
-      paddingTop: '3rem',
-      paddingBottom: 'calc(var(--bottom-nav-height) + var(--safe-bottom) + 2rem)',
-      marginTop: 'auto',
-      borderTop: '1px solid var(--slate-surface)',
-    }}>
-      <div className="container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '2rem',
-          marginBottom: '2.5rem',
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <span className="material-symbols-outlined" style={{ color: '#38bdf8' }}>memory</span>
-              <span style={{ fontFamily: 'var(--font-headline)', fontWeight: 800, fontSize: '1.25rem' }}>
-                Techloom Makers
+    <footer className="w-full bg-[#050810] border-t border-white/[0.08] text-slate-400 font-sans mt-auto pb-20 md:pb-8 pt-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          
+          {/* Brand Info */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+                <Cpu className="w-4 h-4 text-cyan-400" />
+              </div>
+              <span className="font-display font-bold text-base tracking-wider text-white">
+                TECH<span className="text-cyan-400">LOOM</span> MAKERS
               </span>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.875rem', lineHeight: 1.6 }}>
-              Silicon logistics and component fulfillment designed specifically for hardware engineers, roboticists, and tech innovators.
+            <p className="text-xs text-slate-400 leading-relaxed font-body">
+              Precision silicon logistics and rapid component fulfillment engineered for hardware hackers, roboticists, and embedded system architects.
             </p>
+            <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full w-fit">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span>INVENTORY CLUSTERS ONLINE</span>
+            </div>
           </div>
 
+          {/* Quick Hardware Catalog */}
           <div>
-            <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#f8fafc', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Hardware Categories
+            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-4 border-l-2 border-cyan-500 pl-2">
+              Hardware Directory
             </h4>
-            <ul style={{ listStyle: 'none', fontSize: '0.875rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <li>Microcontrollers & Dev Boards</li>
-              <li>Environmental & IMU Sensors</li>
-              <li>Precision Displays & Actuators</li>
-              <li>Robotics & Motor Controllers</li>
+            <ul className="space-y-2 text-xs font-mono">
+              <li>
+                <Link to="/products?category=Microcontrollers" className="hover:text-cyan-400 transition-colors">
+                  &gt; Microcontrollers & Dev Boards
+                </Link>
+              </li>
+              <li>
+                <Link to="/products?category=Sensors" className="hover:text-cyan-400 transition-colors">
+                  &gt; Environmental & IMU Sensors
+                </Link>
+              </li>
+              <li>
+                <Link to="/products?category=Displays" className="hover:text-cyan-400 transition-colors">
+                  &gt; Precision OLED & TFT Displays
+                </Link>
+              </li>
+              <li>
+                <Link to="/products?category=Robotics" className="hover:text-cyan-400 transition-colors">
+                  &gt; Actuators & Motor Controllers
+                </Link>
+              </li>
             </ul>
           </div>
 
+          {/* Assessment Architecture Specs */}
           <div>
-            <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#f8fafc', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Assessment Architecture
+            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-4 border-l-2 border-purple-500 pl-2">
+              Platform Architecture
             </h4>
-            <ul style={{ listStyle: 'none', fontSize: '0.875rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <li>Atomic Inventory Decrements</li>
-              <li>5-Minute Guaranteed Reservation Hold</li>
-              <li>Duplicate-Payment Idempotency Shield</li>
-              <li>Simulated Refund & Cancellation Machine</li>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span>Idempotency-Shielded Payments</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>5-Minute Stock Reservation</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span>Simulated Refunds & Cancellation</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Atomic Inventory Decrements</span>
+              </li>
             </ul>
           </div>
+
+          {/* System Telemetry */}
+          <div>
+            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-4 border-l-2 border-cyan-500 pl-2">
+              System Telemetry
+            </h4>
+            <div className="bg-[#0a0f1d] border border-white/[0.06] rounded-xl p-3 font-mono text-[11px] space-y-1.5 text-slate-400">
+              <div className="flex justify-between">
+                <span>GATEWAY:</span>
+                <span className="text-cyan-400">REST API v1</span>
+              </div>
+              <div className="flex justify-between">
+                <span>IDEMPOTENCY:</span>
+                <span className="text-emerald-400">ENFORCED</span>
+              </div>
+              <div className="flex justify-between">
+                <span>DATABASE:</span>
+                <span className="text-slate-300">SQLite Atomic</span>
+              </div>
+              <div className="flex justify-between">
+                <span>CLIENT UI:</span>
+                <span className="text-purple-400">React 19 + 3D Fiber</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <div style={{
-          paddingTop: '1.5rem',
-          borderTop: '1px solid #1e293b',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '0.8125rem',
-          color: '#64748b',
-          gap: '1rem',
-        }}>
-          <div>
-            © 2026 Techloom Store. Built for Techloom.ai Practical Assessment Task 02.
-          </div>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <span>REST API Ready</span>
-            <span>RESTful Micro-Reservations</span>
-            <span>Precision Spec Modern</span>
+        {/* Bottom Bar */}
+        <div className="border-t border-white/[0.06] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-500">
+          <p>&copy; {new Date().getFullYear()} TECHLOOM STORE. Engineered for maker electronics.</p>
+          <div className="flex items-center gap-4">
+            <span className="hover:text-slate-400 transition-colors">PRIVACY SPEC</span>
+            <span>&bull;</span>
+            <span className="hover:text-slate-400 transition-colors">HARDWARE TERMS</span>
+            <span>&bull;</span>
+            <span className="hover:text-slate-400 transition-colors">SECURITY AUDIT</span>
           </div>
         </div>
       </div>

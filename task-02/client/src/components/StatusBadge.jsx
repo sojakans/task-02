@@ -1,29 +1,35 @@
 import React from 'react';
+import {
+  Timer,
+  CheckCircle2,
+  AlertOctagon,
+  Clock,
+  XCircle,
+  Package,
+} from 'lucide-react';
+import { Badge } from './ui/Badge';
 
 export const StatusBadge = ({ status, type = 'order' }) => {
   if (type === 'stock') {
     const stockCount = Number(status);
     if (stockCount > 5) {
       return (
-        <span className="badge-stock-in">
-          <span className="pulse-dot" style={{ background: 'var(--stock-in)' }}></span>
+        <Badge variant="success" size="sm" dot pulse>
           {stockCount} in stock
-        </span>
+        </Badge>
       );
     }
     if (stockCount > 0) {
       return (
-        <span className="badge-stock-warning">
-          <span className="pulse-dot" style={{ background: 'var(--stock-warning)' }}></span>
+        <Badge variant="warning" size="sm" dot pulse>
           Only {stockCount} left
-        </span>
+        </Badge>
       );
     }
     return (
-      <span className="badge-stock-out">
-        <span className="pulse-dot" style={{ background: 'var(--stock-out)' }}></span>
+      <Badge variant="danger" size="sm" dot>
         Out of stock
-      </span>
+      </Badge>
     );
   }
 
@@ -31,22 +37,51 @@ export const StatusBadge = ({ status, type = 'order' }) => {
   const normalizedStatus = (status || 'PENDING').toUpperCase();
 
   const config = {
-    RESERVED: { label: 'Stock Reserved', icon: 'timer', className: 'status-pill RESERVED' },
-    PAID: { label: 'Payment Paid', icon: 'check_circle', className: 'status-pill PAID' },
-    FAILED: { label: 'Payment Failed', icon: 'error', className: 'status-pill FAILED' },
-    EXPIRED: { label: 'Reservation Expired', icon: 'hourglass_disabled', className: 'status-pill EXPIRED' },
-    CANCELLED: { label: 'Cancelled', icon: 'cancel', className: 'status-pill CANCELLED' },
-    PENDING: { label: 'Pending', icon: 'schedule', className: 'status-pill' },
+    RESERVED: {
+      label: 'STOCK RESERVED',
+      icon: Timer,
+      variant: 'warning',
+      pulse: true,
+    },
+    PAID: {
+      label: 'PAYMENT VERIFIED',
+      icon: CheckCircle2,
+      variant: 'success',
+      pulse: false,
+    },
+    FAILED: {
+      label: 'PAYMENT FAILED',
+      icon: AlertOctagon,
+      variant: 'danger',
+      pulse: false,
+    },
+    EXPIRED: {
+      label: 'HOLD EXPIRED',
+      icon: Clock,
+      variant: 'danger',
+      pulse: false,
+    },
+    CANCELLED: {
+      label: 'CANCELLED',
+      icon: XCircle,
+      variant: 'default',
+      pulse: false,
+    },
+    PENDING: {
+      label: 'PROCESSING',
+      icon: Package,
+      variant: 'info',
+      pulse: true,
+    },
   };
 
   const current = config[normalizedStatus] || config.PENDING;
+  const Icon = current.icon;
 
   return (
-    <span className={current.className} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-        {current.icon}
-      </span>
-      {current.label}
-    </span>
+    <Badge variant={current.variant} size="sm" dot pulse={current.pulse}>
+      <Icon className="w-3 h-3 inline-block mr-0.5" />
+      <span>{current.label}</span>
+    </Badge>
   );
 };

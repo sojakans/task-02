@@ -1,5 +1,7 @@
 import React from 'react';
+import { Timer, AlertTriangle, AlertOctagon, Clock } from 'lucide-react';
 import { useCountdown } from '../hooks/useCountdown';
+import { CountdownCircle } from './animations/CountdownCircle';
 
 export const ReservationCountdown = ({ expiresAt, onExpire }) => {
   const { formattedTime, secondsLeft, isExpired } = useCountdown(expiresAt, onExpire);
@@ -8,134 +10,79 @@ export const ReservationCountdown = ({ expiresAt, onExpire }) => {
 
   if (isExpired) {
     return (
-      <div
-        style={{
-          background: 'var(--stock-out-bg)',
-          border: '1.5px solid var(--stock-out-border)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '1.25rem 1.5rem',
-          textAlign: 'center',
-          color: 'var(--stock-out-text)',
-          marginBottom: '1.5rem',
-          boxShadow: 'var(--shadow-sm)',
-        }}
-      >
-        <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
-          background: '#fee2e2',
-          color: 'var(--stock-out)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '0.5rem',
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
-            timer_off
-          </span>
+      <div className="bg-rose-950/40 border-2 border-rose-500/50 rounded-2xl p-6 text-center shadow-xl shadow-rose-950/30 space-y-3 mb-6">
+        <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/30">
+          <AlertOctagon className="w-6 h-6" />
         </div>
-        <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.125rem', fontWeight: 800 }}>
-          Reservation Expired
-        </h3>
-        <p style={{ fontSize: '0.8125rem', marginTop: '0.25rem', opacity: 0.9 }}>
-          Your stock reservation has expired. Components have been released back to available stock.
-        </p>
+        <div>
+          <h3 className="font-display font-bold text-lg text-rose-300">
+            Stock Reservation Hold Expired
+          </h3>
+          <p className="text-xs font-mono text-slate-300 mt-1 max-w-md mx-auto">
+            Your 5-minute allocation window has elapsed. Unsettled inventory has been returned automatically to the global pool.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      style={{
-        background: isWarning ? '#fffbeb' : '#ffffff',
-        border: `2px solid ${isWarning ? 'var(--stock-warning)' : '#bfdbfe'}`,
-        borderRadius: 'var(--radius-xl)',
-        padding: '1.5rem 1.25rem',
-        textAlign: 'center',
-        marginBottom: '1.5rem',
-        boxShadow: isWarning
-          ? '0 4px 16px rgba(245, 158, 11, 0.18)'
-          : '0 4px 16px rgba(37, 99, 235, 0.08)',
-        transition: 'all 0.3s ease',
-      }}
+      className={`rounded-2xl p-6 transition-all duration-300 border mb-6 relative overflow-hidden ${
+        isWarning
+          ? 'bg-amber-950/30 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]'
+          : 'bg-[#0d1527]/90 border-cyan-500/30 shadow-[0_0_25px_rgba(6,182,212,0.12)]'
+      }`}
     >
-      {/* Title & Badge */}
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <span
-          className="pulse-dot"
-          style={{ background: isWarning ? 'var(--stock-warning)' : 'var(--stock-in)' }}
-        />
-        <h3 style={{
-          fontFamily: 'var(--font-headline)',
-          fontSize: '1.125rem',
-          fontWeight: 800,
-          color: isWarning ? '#92400e' : 'var(--slate-dark)',
-          letterSpacing: '-0.01em',
-        }}>
-          Stock Reserved
-        </h3>
-      </div>
-
-      {/* Instructional Message */}
-      <p style={{
-        fontSize: '0.875rem',
-        color: isWarning ? '#b45309' : 'var(--text-muted)',
-        marginBottom: '1rem',
-      }}>
-        Complete payment within the reservation period.
-      </p>
-
-      {/* Timer Display Box */}
-      <div style={{
-        display: 'inline-block',
-        padding: '0.5rem 1.5rem',
-        borderRadius: 'var(--radius-lg)',
-        background: isWarning ? '#fef3c7' : '#eff6ff',
-        border: `1px solid ${isWarning ? '#fde68a' : '#dbeafe'}`,
-      }}>
-        <span style={{
-          display: 'block',
-          fontSize: '0.6875rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: isWarning ? '#92400e' : 'var(--secondary)',
-          marginBottom: '0.125rem',
-        }}>
-          Expires in
-        </span>
-        <div
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '2.25rem',
-            fontWeight: 800,
-            lineHeight: 1.1,
-            color: isWarning ? '#b45309' : 'var(--primary)',
-            letterSpacing: '0.05em',
-          }}
-        >
-          {formattedTime}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        {/* Left Info */}
+        <div className="text-center sm:text-left space-y-1.5">
+          <div className="inline-flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  isWarning ? 'bg-amber-400' : 'bg-cyan-400'
+                }`}
+              />
+              <span
+                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  isWarning ? 'bg-amber-500' : 'bg-cyan-500'
+                }`}
+              />
+            </span>
+            <span
+              className={`text-xs font-mono font-bold uppercase tracking-wider ${
+                isWarning ? 'text-amber-400' : 'text-cyan-400'
+              }`}
+            >
+              Atomic Stock Lock Active
+            </span>
+          </div>
+          <h3 className="font-display font-bold text-lg text-white">
+            Guaranteed Inventory Hold
+          </h3>
+          <p className="text-xs text-slate-300 font-mono max-w-sm">
+            Complete settlement before expiration to ensure your components are not reallocated.
+          </p>
         </div>
-      </div>
 
-      {isWarning && (
-        <div style={{
-          marginTop: '0.75rem',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          color: 'var(--stock-warning-text)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.375rem',
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-            warning
+        {/* Right Radial Timer */}
+        <div className="flex flex-col items-center shrink-0">
+          <CountdownCircle
+            secondsLeft={secondsLeft}
+            totalSeconds={300}
+            size={84}
+            strokeWidth={6}
+          />
+          <span
+            className={`text-[10px] font-mono tracking-widest uppercase mt-2 font-bold ${
+              isWarning ? 'text-amber-400 animate-pulse' : 'text-slate-400'
+            }`}
+          >
+            {isWarning ? 'EXPIRING SOON' : 'RESERVATION TIME'}
           </span>
-          <span>Hurry! Stock releases in less than a minute.</span>
         </div>
-      )}
+      </div>
     </div>
   );
 };

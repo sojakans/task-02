@@ -1,7 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  CheckCircle2,
+  Package,
+  ShoppingBag,
+  ExternalLink,
+  ShieldCheck,
+  Cpu,
+} from 'lucide-react';
 import { orderService } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { SuccessConfetti } from '../components/3d/SuccessConfetti';
+import { CheckoutStepper } from '../components/CheckoutStepper';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 
 export const OrderSuccessPage = () => {
   const { orderId } = useParams();
@@ -30,143 +43,132 @@ export const OrderSuccessPage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
-          progress_activity
-        </span>
-        <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)' }}>Confirming dispatch authorization...</p>
+      <div className="max-w-xl mx-auto px-4 py-24 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-spin mb-4">
+          <Cpu className="w-6 h-6" />
+        </div>
+        <p className="text-xs font-mono text-slate-400">Verifying cryptographic dispatch confirmation...</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <div style={{ maxWidth: '440px', margin: '0 auto', background: 'var(--card)', padding: '2rem 1.5rem', borderRadius: 'var(--radius-xl)' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--stock-out)' }}>error</span>
-          <h2 style={{ fontFamily: 'var(--font-headline)', marginTop: '0.75rem', fontSize: '1.25rem' }}>Order Not Found</h2>
-          <Link to="/orders" className="btn-primary" style={{ marginTop: '1.5rem', minHeight: '44px' }}>View Order History</Link>
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-8 shadow-2xl space-y-4">
+          <h2 className="font-display font-bold text-xl text-white">Order Record Not Found</h2>
+          <Link to="/orders">
+            <Button variant="primary" size="md">
+              Check Order History
+            </Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem 1rem 5rem 1rem', minHeight: '75vh', display: 'flex', alignItems: 'center' }}>
-      <div className="container" style={{ maxWidth: '480px', width: '100%' }}>
-        {/* ============================================================
-            REQUIREMENT 10: PROFESSIONAL MOBILE SUCCESS SCREEN
-            Large success icon, "Payment Successful", Order ID, Total Amount,
-            Payment ID, Date, [ View Order ], [ Continue Shopping ].
-            ============================================================ */}
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-md)',
-          padding: '2.5rem 1.5rem',
-          textAlign: 'center',
-        }}>
-          {/* Large Success Icon */}
-          <div style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '50%',
-            background: '#ecfdf5',
-            color: 'var(--stock-in)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '1rem',
-            border: '2px solid #a7f3d0',
-            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 800 }}>
-              check
-            </span>
-          </div>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative">
+      {/* 3D Confetti Particle Explosion */}
+      <SuccessConfetti duration={4500} />
 
-          <h1 style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '1.625rem',
-            fontWeight: 800,
-            color: 'var(--slate-dark)',
-            marginBottom: '0.375rem',
-          }}>
-            Payment Successful
-          </h1>
+      {/* Stepper */}
+      <CheckoutStepper currentStep={4} />
 
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
-            Your transaction has been cryptographically confirmed. Silicon inventory is officially allocated.
-          </p>
+      {/* Main Success Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-[#0d1527]/90 backdrop-blur-2xl border border-emerald-500/30 rounded-3xl p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_40px_rgba(16,185,129,0.15)] text-center space-y-6 relative overflow-hidden"
+      >
+        {/* Glow Accent */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-64 h-24 bg-emerald-500/15 blur-3xl pointer-events-none" />
 
-          {/* Key Details Card */}
-          <div style={{
-            background: 'var(--card-subtle)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-hairline)',
-            padding: '1.25rem',
-            marginBottom: '2rem',
-            textAlign: 'left',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Order ID:</span>
-              <strong style={{ fontSize: '0.9375rem', fontFamily: 'monospace', color: 'var(--slate-dark)' }}>
-                #{order.orderId}
-              </strong>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Total Amount:</span>
-              <strong style={{ fontSize: '1.125rem', fontFamily: 'var(--font-headline)', color: 'var(--primary)' }}>
-                {formatCurrency(order.totalAmount)}
-              </strong>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Payment ID:</span>
-              <strong style={{ fontSize: '0.8125rem', fontFamily: 'monospace', color: 'var(--slate-dark)' }}>
-                {order.paymentId || `PAY-${order.orderId.slice(-6).toUpperCase()}`}
-              </strong>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Date:</span>
-              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--slate-dark)' }}>
-                {formatDate(order.createdAt)}
-              </span>
-            </div>
-          </div>
-
-          {/* Action Buttons: [ View Order ] and [ Continue Shopping ] */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Link
-              to={`/orders/${order.orderId}`}
-              className="btn-primary"
-              style={{ width: '100%', minHeight: '48px', fontSize: '1rem' }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                receipt_long
-              </span>
-              <span>View Order</span>
-            </Link>
-
-            <Link
-              to="/products"
-              className="btn-secondary"
-              style={{ width: '100%', minHeight: '48px', fontSize: '0.9375rem' }}
-            >
-              <span>Continue Shopping</span>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                arrow_forward
-              </span>
-            </Link>
+        {/* Large Glowing Checkmark Badge */}
+        <div className="relative inline-flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl animate-pulse" />
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 border-2 border-emerald-400/50 flex items-center justify-center text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+            <CheckCircle2 className="w-10 h-10" />
           </div>
         </div>
-      </div>
+
+        {/* Heading */}
+        <div className="space-y-1.5">
+          <Badge variant="success" size="sm" dot>
+            SETTLEMENT VERIFIED
+          </Badge>
+          <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+            Order Dispatched to Warehouse
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 font-mono max-w-md mx-auto">
+            Your payment was cryptographically authorized. Hardware inventory is officially locked and scheduled for logistics routing.
+          </p>
+        </div>
+
+        {/* Specs & Receipt Matrix */}
+        <div className="bg-[#070b14]/90 border border-white/[0.08] rounded-2xl p-5 text-left font-mono text-xs space-y-2.5">
+          <div className="flex justify-between items-center text-slate-400 border-b border-white/[0.06] pb-2">
+            <span>Order Reference:</span>
+            <span className="text-cyan-400 font-bold">#{order.orderId}</span>
+          </div>
+
+          {order.paymentId && (
+            <div className="flex justify-between items-center text-slate-400 border-b border-white/[0.06] pb-2">
+              <span>Payment Gateway Ref:</span>
+              <span className="text-purple-400 font-bold">{order.paymentId}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center text-slate-400 border-b border-white/[0.06] pb-2">
+            <span>Timestamp:</span>
+            <span className="text-slate-200">{formatDate(order.createdAt)}</span>
+          </div>
+
+          <div className="flex justify-between items-center text-slate-400 border-b border-white/[0.06] pb-2">
+            <span>Allocated Units:</span>
+            <span className="text-slate-200">{order.items?.length || 0} items</span>
+          </div>
+
+          <div className="flex justify-between items-baseline pt-1 text-sm">
+            <span className="font-bold text-white">Settled Total:</span>
+            <span className="font-black text-xl text-emerald-400">
+              {formatCurrency(order.totalAmount)}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <Link to={`/orders/${order.orderId}`}>
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full font-mono text-xs font-bold"
+              iconRight={<ExternalLink className="w-3.5 h-3.5" />}
+            >
+              ORDER TELEMETRY
+            </Button>
+          </Link>
+          <Link to="/products">
+            <Button
+              variant="secondary"
+              size="md"
+              className="w-full font-mono text-xs"
+              iconLeft={<ShoppingBag className="w-3.5 h-3.5" />}
+            >
+              CONTINUE SHOPPING
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-slate-500 pt-2 border-t border-white/[0.06]">
+          <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Complimentary Tracking & Hardware Replacement Warranty</span>
+        </div>
+
+      </motion.div>
+
     </div>
   );
 };

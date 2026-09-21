@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ShoppingBag, Check, ArrowRight, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import { StatusBadge } from './StatusBadge';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
+import { TiltCard } from './3d/TiltCard';
+import { Button } from './ui/Button';
 
 export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const [adding, setAdding] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [added, setAdded] = useState(false);
 
   const isOutOfStock = product.availableStock <= 0;
 
@@ -21,226 +26,118 @@ export const ProductCard = ({ product }) => {
     setAdding(false);
 
     if (res.success) {
-      setMessage('Added to cart!');
-      setTimeout(() => setMessage(null), 2000);
+      setAdded(true);
+      toast.success(`Added 1x ${product.name} to cart!`);
+      setTimeout(() => setAdded(false), 2000);
     } else {
-      setMessage(res.message);
-      setTimeout(() => setMessage(null), 3000);
+      toast.error(res.message || 'Could not add to cart');
     }
   };
 
   return (
-    <div
-      className="spec-card"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative',
-      }}
+    <TiltCard
+      maxTilt={6}
+      className="group flex flex-col h-full bg-[#0d1527]/80 hover:bg-[#111c34]/90 backdrop-blur-xl border border-white/[0.08] hover:border-cyan-500/40 rounded-2xl transition-all duration-300 shadow-xl shadow-black/40 hover:shadow-[0_12px_32px_rgba(6,182,212,0.18)] overflow-hidden"
     >
-      {/* Product Image Header */}
+      {/* Product Image Stage */}
       <Link
         to={`/products/${product._id}`}
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          background: '#f1f5f9',
-          display: 'block',
-          aspectRatio: '4 / 3',
-        }}
+        className="relative block aspect-[4/3] w-full overflow-hidden bg-[#0a0f1d] border-b border-white/[0.06]"
       >
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transition: 'transform 0.3s ease',
-          }}
+          className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
           }}
         />
-        {/* Availability Badge floating over image on mobile */}
-        <div style={{ position: 'absolute', top: '0.4rem', right: '0.4rem' }}>
+
+        {/* Ambient Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1527] via-transparent to-black/30 opacity-70 group-hover:opacity-40 transition-opacity" />
+
+        {/* Stock Badge Top Right */}
+        <div className="absolute top-3 right-3 z-10">
           <StatusBadge status={product.availableStock} type="stock" />
         </div>
 
+        {/* SKU Badge Top Left */}
         {product.sku && (
-          <span
-            className="desktop-only"
-            style={{
-              position: 'absolute',
-              bottom: '0.5rem',
-              left: '0.5rem',
-              background: 'rgba(15, 23, 42, 0.85)',
-              color: '#f8fafc',
-              fontSize: '0.6875rem',
-              fontWeight: 600,
-              padding: '0.2rem 0.5rem',
-              borderRadius: '4px',
-              backdropFilter: 'blur(4px)',
-              fontFamily: 'monospace',
-            }}
-          >
+          <span className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md border border-white/10 text-slate-300 text-[10px] font-mono font-medium px-2 py-0.5 rounded-md">
             {product.sku}
           </span>
         )}
+
+        {/* Quick View Button floating on hover */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/90 text-slate-950 font-mono text-xs font-bold shadow-lg shadow-cyan-500/40 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+            <Eye className="w-3.5 h-3.5" />
+            <span>VIEW SPECS</span>
+          </span>
+        </div>
       </Link>
 
-      {/* Card Body */}
-      <div
-        style={{
-          padding: '0.75rem',
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          justifyContent: 'space-between',
-        }}
-      >
+      {/* Card Content */}
+      <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
         <div>
           {/* Category Tag */}
-          <div style={{
-            fontSize: '0.6875rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em',
-            color: 'var(--secondary)',
-            marginBottom: '0.25rem',
-          }}>
-            {product.category}
+          <div className="flex items-center justify-between text-[11px] font-mono text-cyan-400/90 uppercase tracking-wider mb-1">
+            <span>{product.category}</span>
           </div>
 
           {/* Product Title */}
-          <Link to={`/products/${product._id}`} style={{ display: 'block' }}>
-            <h3
-              style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: '0.9375rem',
-                fontWeight: 700,
-                color: 'var(--slate-dark)',
-                lineHeight: 1.3,
-                marginBottom: '0.375rem',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                minHeight: '2.4rem',
-              }}
-              title={product.name}
-            >
-              {product.name}
-            </h3>
+          <Link
+            to={`/products/${product._id}`}
+            className="block font-display font-bold text-sm sm:text-base text-white hover:text-cyan-300 transition-colors line-clamp-2 leading-snug"
+          >
+            {product.name}
           </Link>
 
-          {/* Desktop Hardware Specs Pills */}
-          {product.specs && (
-            <div className="desktop-flex" style={{ flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.75rem' }}>
-              {product.specs.architecture && (
-                <span style={{
-                  fontSize: '0.6875rem',
-                  background: 'var(--card-subtle)',
-                  color: 'var(--slate-dark)',
-                  padding: '0.125rem 0.375rem',
-                  borderRadius: '4px',
-                  border: '1px solid var(--border-hairline)',
-                }}>
-                  {product.specs.architecture}
+          {/* Key Specs snippet if available */}
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {Object.entries(product.specifications).slice(0, 2).map(([key, val]) => (
+                <span
+                  key={key}
+                  className="inline-block text-[10px] font-mono bg-white/[0.04] border border-white/[0.06] text-slate-400 px-1.5 py-0.5 rounded"
+                >
+                  {val}
                 </span>
-              )}
-              {product.specs.clockSpeed && (
-                <span style={{
-                  fontSize: '0.6875rem',
-                  background: 'var(--card-subtle)',
-                  color: 'var(--slate-dark)',
-                  padding: '0.125rem 0.375rem',
-                  borderRadius: '4px',
-                  border: '1px solid var(--border-hairline)',
-                }}>
-                  {product.specs.clockSpeed}
-                </span>
-              )}
+              ))}
             </div>
           )}
         </div>
 
-        {/* Price & Action Area */}
-        <div style={{
-          marginTop: '0.5rem',
-          paddingTop: '0.5rem',
-          borderTop: '1px solid var(--border-hairline)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <div>
-              <span style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: '1.125rem',
-                fontWeight: 800,
-                color: 'var(--slate-dark)',
-              }}>
-                {formatCurrency(product.price)}
-              </span>
-            </div>
-            <Link
-              to={`/products/${product._id}`}
-              className="desktop-only"
-              style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}
-            >
-              Specs →
-            </Link>
+        {/* Price & Action Row */}
+        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2 mt-auto">
+          <div>
+            <span className="text-[10px] font-mono uppercase text-slate-500 block">
+              Unit Price
+            </span>
+            <span className="text-base sm:text-lg font-bold font-mono text-white tracking-tight">
+              {formatCurrency(product.price)}
+            </span>
           </div>
 
-          {/* Add to Cart Button (Touch Friendly) */}
-          <button
-            type="button"
-            onClick={handleAddToCart}
+          <Button
+            size="sm"
+            variant={added ? 'secondary' : isOutOfStock ? 'ghost' : 'primary'}
             disabled={isOutOfStock || adding}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '0.5rem 0.75rem',
-              fontSize: '0.8125rem',
-              minHeight: '40px',
-              borderRadius: 'var(--radius-md)',
-            }}
-            aria-label={`Add ${product.name} to cart`}
+            onClick={handleAddToCart}
+            className="shrink-0"
+            iconLeft={
+              added ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <ShoppingBag className="w-3.5 h-3.5" />
+              )
+            }
           >
-            {adding ? (
-              <span className="material-symbols-outlined" style={{ fontSize: '18px', animation: 'spin 1s linear infinite' }}>
-                sync
-              </span>
-            ) : isOutOfStock ? (
-              <span>Out of Stock</span>
-            ) : (
-              <>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  add_shopping_cart
-                </span>
-                <span>Add to Cart</span>
-              </>
-            )}
-          </button>
+            {isOutOfStock ? 'Sold Out' : added ? 'Added' : 'Add to Cart'}
+          </Button>
         </div>
-
-        {/* Message Banner */}
-        {message && (
-          <div style={{
-            marginTop: '0.375rem',
-            fontSize: '0.6875rem',
-            textAlign: 'center',
-            padding: '0.2rem 0.4rem',
-            borderRadius: '4px',
-            background: message.includes('Added') ? 'var(--stock-in-bg)' : 'var(--stock-out-bg)',
-            color: message.includes('Added') ? 'var(--stock-in-text)' : 'var(--stock-out-text)',
-            border: `1px solid ${message.includes('Added') ? 'var(--stock-in-border)' : 'var(--stock-out-border)'}`,
-          }}>
-            {message}
-          </div>
-        )}
       </div>
-    </div>
+    </TiltCard>
   );
 };

@@ -1,14 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  Cpu,
+  Layers,
+  Activity,
+  Tv,
+  Bot,
+  Search,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  RefreshCw,
+  Zap,
+  Sparkles,
+  Terminal,
+  CheckCircle2,
+} from 'lucide-react';
 import { productService } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
+import { HeroScene } from '../components/3d/HeroScene';
+import { StaggerGrid, StaggerItem } from '../components/animations/StaggerGrid';
+import { ProductCardSkeleton } from '../components/ui/Skeleton';
+import { Button } from '../components/ui/Button';
 
 const CATEGORIES = [
-  { label: 'All', value: 'All', icon: 'apps' },
-  { label: 'Microcontrollers', value: 'Microcontrollers', icon: 'memory' },
-  { label: 'Sensors', value: 'Sensors', icon: 'sensors' },
-  { label: 'Displays', value: 'Displays', icon: 'tv' },
-  { label: 'Robotics', value: 'Robotics', icon: 'smart_toy' },
+  { label: 'All Catalog', value: 'All', icon: Layers },
+  { label: 'Microcontrollers', value: 'Microcontrollers', icon: Cpu },
+  { label: 'Sensors', value: 'Sensors', icon: Activity },
+  { label: 'Displays', value: 'Displays', icon: Tv },
+  { label: 'Robotics', value: 'Robotics', icon: Bot },
 ];
 
 export const HomePage = () => {
@@ -50,435 +71,290 @@ export const HomePage = () => {
   };
 
   return (
-    <div>
-      {/* ============================================================
-          MOBILE SEARCH & CATEGORY CHIPS BAR (Below Mobile Header)
-          ============================================================ */}
-      <div className="mobile-only" style={{
-        padding: '0.875rem 1rem 0.5rem',
-        background: '#ffffff',
-        borderBottom: '1px solid var(--border-hairline)',
-      }}>
-        {/* Large Search Bar */}
-        <form onSubmit={handleSearchSubmit} style={{ position: 'relative', marginBottom: '0.75rem' }}>
-          <span
-            className="material-symbols-outlined"
-            style={{
-              position: 'absolute',
-              left: '0.875rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-subtle)',
-              fontSize: '20px',
-              pointerEvents: 'none',
-            }}
-          >
-            search
-          </span>
+    <div className="min-h-screen text-slate-100 relative overflow-hidden">
+      
+      {/* Mobile Search Bar */}
+      <div className="md:hidden px-4 py-3 bg-[#0a0f1d]/90 border-b border-white/[0.08] backdrop-blur-xl">
+        <form onSubmit={handleSearchSubmit} className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            className="input-field"
-            placeholder="Search products..."
+            placeholder="Search microcontrollers, sensors..."
             value={mobileSearch}
             onChange={(e) => setMobileSearch(e.target.value)}
-            style={{
-              paddingLeft: '2.5rem',
-              paddingRight: mobileSearch ? '2.5rem' : '1rem',
-              background: 'var(--card-subtle)',
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid var(--border-hairline)',
-              fontSize: '0.9375rem',
-            }}
+            className="w-full bg-[#070b14] border border-white/[0.1] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500/60 font-mono"
           />
-          {mobileSearch && (
-            <button
-              type="button"
-              onClick={() => setMobileSearch('')}
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-subtle)',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              aria-label="Clear Search"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                close
-              </span>
-            </button>
-          )}
         </form>
-
-        {/* Horizontally Scrollable Categories */}
-        <div>
-          <div style={{
-            fontSize: '0.6875rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: 'var(--text-muted)',
-            marginBottom: '0.375rem',
-          }}>
-            Categories
-          </div>
-          <div className="category-chips-bar">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setActiveCategory(cat.value)}
-                className={`chip-item ${activeCategory === cat.value ? 'active' : ''}`}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                  {cat.icon}
-                </span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ============================================================
-          HERO SECTION (Desktop & Mobile Adaptive)
+          HERO SECTION WITH 3D QUANTUM CORE
           ============================================================ */}
-      <section style={{
-        backgroundColor: 'var(--slate-dark)',
-        color: '#ffffff',
-        position: 'relative',
-        overflow: 'hidden',
-        padding: '2.5rem 0',
-      }}>
-        {/* Ambient Grid Background */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.12,
-          backgroundImage: 'radial-gradient(#38bdf8 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-          pointerEvents: 'none',
-        }} />
+      <section className="relative pt-8 pb-16 md:pt-16 md:pb-24 overflow-hidden">
+        {/* Subtle Ambient Light Orbs */}
+        <div className="absolute top-10 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '2rem',
-            alignItems: 'center',
-          }}>
-            {/* Left Hero Content */}
-            <div>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.375rem 0.75rem',
-                borderRadius: '9999px',
-                background: 'var(--slate-muted)',
-                color: '#7dd3fc',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--stock-in)' }}>
-                  bolt
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Column: Mission & CTAs */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* High-Tech Status Pill */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono tracking-wider shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+              >
+                <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <span>ATOMIC STOCK RESERVATION ENGINE v2.4</span>
+              </motion.div>
+
+              {/* Main Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="font-display font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-[1.1]"
+              >
+                Silicon Logistics for{' '}
+                <span className="text-gradient-cyan block sm:inline">
+                  Hardware Innovators.
                 </span>
-                Real-time Silicon Logistics Engine
-              </div>
+              </motion.h1>
 
-              <h1 style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: 'clamp(1.75rem, 4vw, 3.25rem)',
-                fontWeight: 800,
-                lineHeight: 1.15,
-                letterSpacing: '-0.02em',
-                marginBottom: '0.75rem',
-              }}>
-                Build. Create.{' '}
-                <span style={{ color: '#38bdf8' }}>Innovate.</span>
-              </h1>
+              {/* Subheading */}
+              <motion.p
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-body"
+              >
+                Next-generation electronics fulfillment engineered for embedded systems architects, roboticists, and prototype makers. Guaranteed 5-minute inventory hold and idempotency-shielded payments.
+              </motion.p>
 
-              <p style={{
-                fontSize: '0.9375rem',
-                color: '#cbd5e1',
-                lineHeight: 1.5,
-                maxWidth: '540px',
-                marginBottom: '1.5rem',
-              }}>
-                Precision electronics and development components for hardware engineers, IoT specialists, and roboticists. 5-minute atomic stock locking on checkout.
-              </p>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <Link
-                  to="/products"
-                  className="btn-primary"
-                  style={{ padding: '0.625rem 1.25rem', fontSize: '0.9375rem' }}
-                >
-                  <span>Explore Catalog</span>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                    arrow_forward
-                  </span>
+              {/* Actions */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-wrap items-center gap-4 pt-2"
+              >
+                <Link to="/products">
+                  <Button
+                    size="lg"
+                    variant="primary"
+                    iconRight={<ArrowRight className="w-4 h-4" />}
+                  >
+                    EXPLORE HARDWARE
+                  </Button>
                 </Link>
-                <Link
-                  to="/orders"
-                  className="btn-secondary"
-                  style={{
-                    padding: '0.625rem 1.25rem',
-                    fontSize: '0.9375rem',
-                    background: 'var(--slate-muted)',
-                    color: '#ffffff',
-                    borderColor: 'var(--slate-surface)',
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#7dd3fc' }}>
-                    receipt_long
-                  </span>
-                  <span>My Orders</span>
+                <Link to="/orders">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    iconLeft={<Terminal className="w-4 h-4 text-cyan-400" />}
+                  >
+                    LIVE ORDERS
+                  </Button>
                 </Link>
-              </div>
+              </motion.div>
 
-              {/* Trust Badges Bar */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '0.625rem',
-                marginTop: '1.75rem',
-                paddingTop: '1.25rem',
-                borderTop: '1px solid #1e293b',
-              }}>
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', padding: '0.5rem', borderRadius: '8px', textAlign: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--stock-warning)', fontSize: '18px' }}>
-                    timer
-                  </span>
-                  <div style={{ fontSize: '0.625rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    Guaranteed
+              {/* Live Spec Metrics */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="grid grid-cols-3 gap-4 pt-6 border-t border-white/[0.08]"
+              >
+                <div>
+                  <div className="font-display text-xl sm:text-2xl font-bold text-white">
+                    5:00<span className="text-cyan-400 text-sm">m</span>
                   </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>
-                    5-Min Lock
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wide">
+                    Hold Guarantee
                   </div>
                 </div>
-
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', padding: '0.5rem', borderRadius: '8px', textAlign: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--stock-in)', fontSize: '18px' }}>
-                    local_shipping
-                  </span>
-                  <div style={{ fontSize: '0.625rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    Express
+                <div>
+                  <div className="font-display text-xl sm:text-2xl font-bold text-cyan-400">
+                    100%
                   </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>
-                    4h Dispatch
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wide">
+                    Atomic Locks
                   </div>
                 </div>
-
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', padding: '0.5rem', borderRadius: '8px', textAlign: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '18px' }}>
-                    verified
-                  </span>
-                  <div style={{ fontSize: '0.625rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    Certified
+                <div>
+                  <div className="font-display text-xl sm:text-2xl font-bold text-purple-400">
+                    Zero
                   </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>
-                    Lab Stock
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wide">
+                    Double-Charge Risk
                   </div>
                 </div>
-              </div>
+              </motion.div>
+
             </div>
 
-            {/* Right Telemetry Bench Card (Desktop Only) */}
-            <div className="desktop-only">
-              <div style={{
-                background: 'var(--slate-muted)',
-                borderRadius: 'var(--radius-xl)',
-                padding: '1.75rem',
-                border: '1px solid var(--slate-surface)',
-                boxShadow: 'var(--shadow-xl)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--stock-out)' }}></div>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--stock-warning)' }}></div>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--stock-in)' }}></div>
-                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#94a3b8', marginLeft: '0.25rem' }}>
-                      MCU_TELEMETRY.SYS
-                    </span>
-                  </div>
-                  <span style={{
-                    fontSize: '0.6875rem',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px',
-                    background: 'rgba(16, 185, 129, 0.2)',
-                    color: 'var(--stock-in)',
-                    fontWeight: 700,
-                  }}>
-                    LIVE PING 12ms
-                  </span>
-                </div>
-
-                <div style={{
-                  position: 'relative',
-                  borderRadius: 'var(--radius-lg)',
-                  overflow: 'hidden',
-                  height: '220px',
-                  marginBottom: '1rem',
-                  background: 'var(--slate-dark)',
-                }}>
-                  <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIdGiIB-wJyLRSD44B08eCxDJ9UB-lBP_LMpK3FelFoJqbZoASLYPoVH8mO5eX1QkcEx3B0w7y8V08q1nTvnfDb6xdU4HcDf08gTSambDGpQE6geYjjI88fuE4vbrgG0-W-qY9xqMw96D0uLAkrdO29wUkhuC8voYNTJUNAlYGNVSXCmT2CwNlPHUv9W6MTozo-oGLNgSPB7UVWTNUM1XESyYDqelDal48kKddXhkKtuFguCbOJzYA"
-                    alt="ESP32 Microcontroller PCB"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '0.75rem',
-                    left: '0.75rem',
-                    background: 'rgba(15, 23, 42, 0.9)',
-                    padding: '0.25rem 0.625rem',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    fontFamily: 'monospace',
-                    color: '#ffffff',
-                  }}>
-                    PINOUT: ESP32-WROOM-32E
-                  </div>
-                </div>
-
-                <div style={{
-                  padding: '0.875rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--slate-dark)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                      padding: '0.375rem',
-                      borderRadius: '6px',
-                      background: 'rgba(37, 99, 235, 0.2)',
-                      color: '#38bdf8',
-                    }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                        lock_clock
-                      </span>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.6875rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                        Active Session Reservations
-                      </div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#f8fafc' }}>
-                        Guaranteed Silicon Allocation
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Right Column: Interactive 3D Holographic Core */}
+            <div className="lg:col-span-5 relative flex items-center justify-center">
+              <HeroScene />
             </div>
+
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          POPULAR PRODUCTS SECTION (2-Column Mobile Grid)
+          CATEGORY CHIPS SELECTOR BAR
           ============================================================ */}
-      <section style={{ padding: '2rem 0 4rem' }}>
-        <div className="container">
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.25rem',
-          }}>
+      <section className="border-y border-white/[0.08] bg-[#090d16]/80 backdrop-blur-xl sticky top-16 z-20 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const isActive = activeCategory === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  onClick={() => setActiveCategory(cat.value)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono tracking-wider uppercase font-semibold transition-all shrink-0 cursor-pointer ${
+                    isActive
+                      ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                      : 'bg-slate-900/60 hover:bg-slate-800/80 text-slate-400 hover:text-white border border-white/[0.06]'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          FEATURED INVENTORY CATALOG GRID
+          ============================================================ */}
+      <section className="py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <span style={{
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--primary)',
-                display: 'block',
-              }}>
-                {activeCategory === 'All' ? 'Certified Inventory' : activeCategory}
-              </span>
-              <h2 style={{
-                fontFamily: 'var(--font-headline)',
-                fontSize: '1.375rem',
-                fontWeight: 800,
-                color: 'var(--slate-dark)',
-              }}>
-                Popular Products
+              <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest mb-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Verified Stock Matrix</span>
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                {activeCategory === 'All' ? 'Precision Hardware Components' : `${activeCategory} Collection`}
               </h2>
             </div>
             <Link
               to="/products"
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--primary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-              }}
+              className="inline-flex items-center gap-2 text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider group"
             >
-              <span>View All</span>
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                arrow_forward
-              </span>
+              <span>View Entire Inventory</span>
+              <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          {/* Skeletons while loading */}
+          {/* Product Cards Grid */}
           {loading ? (
-            <div className="mobile-2col-grid">
-              {[1, 2, 3, 4, 5, 6].map((idx) => (
-                <div key={idx} className="spec-card" style={{ padding: '0.75rem' }}>
-                  <div className="skeleton-box" style={{ width: '100%', aspectRatio: '4/3', marginBottom: '0.5rem' }} />
-                  <div className="skeleton-box" style={{ width: '40%', height: '10px', marginBottom: '0.5rem' }} />
-                  <div className="skeleton-box" style={{ width: '90%', height: '14px', marginBottom: '0.5rem' }} />
-                  <div className="skeleton-box" style={{ width: '60%', height: '18px', marginBottom: '0.75rem' }} />
-                  <div className="skeleton-box" style={{ width: '100%', height: '36px', borderRadius: '6px' }} />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
               ))}
             </div>
-          ) : featuredProducts.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem 1rem',
-              background: 'var(--card)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-hairline)',
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--text-subtle)' }}>
-                inventory_2
-              </span>
-              <h3 style={{ marginTop: '0.5rem', fontSize: '1rem', fontWeight: 700 }}>
-                No components found in this category
-              </h3>
-              <button
-                type="button"
-                onClick={() => setActiveCategory('All')}
-                className="btn-primary"
-                style={{ marginTop: '1rem', padding: '0.5rem 1rem', fontSize: '0.8125rem' }}
-              >
-                Show All Categories
-              </button>
-            </div>
-          ) : (
-            <div className="mobile-2col-grid">
+          ) : featuredProducts.length > 0 ? (
+            <StaggerGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <StaggerItem key={product._id}>
+                  <ProductCard product={product} />
+                </StaggerItem>
               ))}
+            </StaggerGrid>
+          ) : (
+            <div className="text-center py-16 bg-[#0a0f1d] border border-white/[0.08] rounded-2xl">
+              <Cpu className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm font-mono">No hardware components found in this category.</p>
             </div>
           )}
+
         </div>
       </section>
+
+      {/* ============================================================
+          PLATFORM ARCHITECTURE & GUARANTEES
+          ============================================================ */}
+      <section className="py-16 bg-[#050810] border-t border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">
+              Engineered for High-Concurrency
+            </span>
+            <h2 className="font-display text-2xl sm:text-3xl font-black text-white mt-1">
+              Assessment Architecture Highlights
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mt-2">
+              Every checkout flow, stock reservation, and mock payment is built to emulate production financial logistics.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div className="bg-[#0b1222] border border-white/[0.08] p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
+                <Clock className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-white text-base mb-2">
+                5-Min Hold Window
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Stock is locked atomically during checkout. If uncompleted within 300s, automated background cleanup returns inventory immediately.
+              </p>
+            </div>
+
+            <div className="bg-[#0b1222] border border-white/[0.08] p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-white text-base mb-2">
+                Idempotency Shield
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Every transaction issues an Idempotency-Key header, guaranteeing zero double-charges even on network timeouts or double-clicks.
+              </p>
+            </div>
+
+            <div className="bg-[#0b1222] border border-white/[0.08] p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-white text-base mb-2">
+                Atomic Decrements
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Direct database-level atomic decrements prevent overselling, racing carts, and phantom stock allocations across concurrent makers.
+              </p>
+            </div>
+
+            <div className="bg-[#0b1222] border border-white/[0.08] p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
+                <RefreshCw className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-white text-base mb-2">
+                Simulated Refunds
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Full order cancellation and refund state machines restore inventory seamlessly and log transactional history with status audit trails.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 };

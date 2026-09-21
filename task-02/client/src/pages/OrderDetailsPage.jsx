@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import {
+  Terminal,
+  Package,
+  MapPin,
+  XCircle,
+  ArrowLeft,
+  Cpu,
+} from 'lucide-react';
 import { orderService } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { StatusBadge } from '../components/StatusBadge';
 import { ReservationCountdown } from '../components/ReservationCountdown';
 import { CancelOrderModal } from '../components/CancelOrderModal';
+import { Button } from '../components/ui/Button';
+import { useToast } from '../context/ToastContext';
 
 export const OrderDetailsPage = () => {
   const { orderId } = useParams();
+  const { toast } = useToast();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +27,6 @@ export const OrderDetailsPage = () => {
   // Cancellation Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [cancelMessage, setCancelMessage] = useState(null);
 
   const fetchOrder = async () => {
     try {
@@ -41,24 +51,21 @@ export const OrderDetailsPage = () => {
   const handleConfirmCancel = async (reason) => {
     try {
       setCancelling(true);
-      setCancelMessage(null);
       const res = await orderService.cancelOrder(order.orderId, reason);
       if (res.success) {
         setModalOpen(false);
-        setCancelMessage({
-          type: 'success',
-          text: res.refund
-            ? `Order cancelled successfully! A refund of ${formatCurrency(res.refund.amount)} has been initiated (Ref: ${res.refund.refundId}).`
-            : 'Order cancelled successfully! Reserved components have been released back to stock.',
-        });
+        if (res.refund) {
+          toast.success(
+            `Order cancelled. Full refund of ${formatCurrency(res.refund.amount)} generated (Ref: ${res.refund.refundId}).`
+          );
+        } else {
+          toast.success('Order cancelled. Reserved components released back to stock.');
+        }
         await fetchOrder();
       }
     } catch (err) {
       console.error('Cancellation error:', err);
-      setCancelMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Failed to cancel order.',
-      });
+      toast.error(err.response?.data?.message || 'Failed to cancel order.');
     } finally {
       setCancelling(false);
     }
@@ -66,22 +73,26 @@ export const OrderDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }}>
-          progress_activity
-        </span>
-        <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)' }}>Loading order telemetry...</p>
+      <div className="max-w-xl mx-auto px-4 py-24 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-spin mb-4">
+          <Cpu className="w-6 h-6" />
+        </div>
+        <p className="text-xs font-mono text-slate-400">Loading order telemetry ledger...</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-        <div style={{ maxWidth: '440px', margin: '0 auto', background: 'var(--card)', padding: '2rem 1.5rem', borderRadius: 'var(--radius-xl)' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--stock-out)' }}>error</span>
-          <h2 style={{ fontFamily: 'var(--font-headline)', marginTop: '0.75rem', fontSize: '1.25rem' }}>Order Not Found</h2>
-          <Link to="/orders" className="btn-primary" style={{ marginTop: '1.5rem', minHeight: '44px' }}>Back to Orders</Link>
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-8 shadow-2xl space-y-4">
+          <h2 className="font-display font-bold text-xl text-white">Order Record Not Found</h2>
+          <p className="text-xs font-mono text-slate-400">{error}</p>
+          <Link to="/orders">
+            <Button variant="primary" size="md">
+              Return to Orders
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -90,424 +101,196 @@ export const OrderDetailsPage = () => {
   const isReserved = order.status === 'RESERVED';
   const isPaid = order.status === 'PAID';
   const isCancelled = order.status === 'CANCELLED';
-  const isExpired = order.status === 'EXPIRED';
-  const isFailed = order.status === 'FAILED';
   const canCancel = isReserved || isPaid;
 
-  // Compute timeline steps
-  const timeline = [
-    {
-      title: 'Order Created',
-      desc: formatDate(order.createdAt),
-      status: 'completed',
-      icon: 'check_circle',
-    },
-    {
-      title: 'Stock Reserved',
-      desc: isExpired
-        ? '5-min window elapsed'
-        : isReserved
-        ? 'Active session lock'
-        : 'Guaranteed lot hold',
-      status: isExpired ? 'failed' : 'completed',
-      icon: isExpired ? 'cancel' : 'check_circle',
-    },
-    {
-      title: 'Payment Completed',
-      desc: isPaid
-        ? 'Captured & authorized'
-        : isFailed
-        ? 'Declined by gateway'
-        : isExpired
-        ? 'Expired without payment'
-        : 'Awaiting payment',
-      status: isPaid ? 'completed' : isFailed ? 'failed' : isReserved ? 'current' : 'pending',
-      icon: isPaid ? 'check_circle' : isFailed ? 'cancel' : isReserved ? 'pending' : 'radio_button_unchecked',
-    },
-    {
-      title: 'Order Confirmed',
-      desc: isPaid ? 'Ready for laboratory dispatch' : isCancelled ? 'Cancelled & released' : 'Pending payment settlement',
-      status: isPaid ? 'completed' : isCancelled ? 'failed' : 'pending',
-      icon: isPaid ? 'verified' : isCancelled ? 'cancel' : 'radio_button_unchecked',
-    },
-  ];
-
   return (
-    <div style={{ padding: '1.5rem 0 4rem 0' }}>
-      <div className="container" style={{ maxWidth: '640px' }}>
-        {/* Navigation Breadcrumb */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.375rem',
-          fontSize: '0.8125rem',
-          color: 'var(--text-muted)',
-          marginBottom: '1rem',
-        }}>
-          <Link to="/orders" style={{ color: 'var(--text-muted)' }}>My Orders</Link>
-          <span>/</span>
-          <span style={{ color: 'var(--slate-dark)', fontWeight: 600 }}>#{order.orderId}</span>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+      
+      {/* Top Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+        <div>
+          <Link
+            to="/orders"
+            className="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:text-cyan-300 mb-2"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Orders Ledger</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Order #{order.orderId}
+            </h1>
+          </div>
+          <span className="text-xs font-mono text-slate-400 mt-1 block">
+            Logged: {formatDate(order.createdAt)}
+          </span>
         </div>
 
-        {/* Cancellation feedback banner */}
-        {cancelMessage && (
-          <div style={{
-            padding: '0.875rem 1rem',
-            borderRadius: 'var(--radius-lg)',
-            background: cancelMessage.type === 'success' ? 'var(--stock-in-bg)' : 'var(--stock-out-bg)',
-            border: `1px solid ${cancelMessage.type === 'success' ? 'var(--stock-in-border)' : 'var(--stock-out-border)'}`,
-            color: cancelMessage.type === 'success' ? 'var(--stock-in-text)' : 'var(--stock-out-text)',
-            marginBottom: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.625rem',
-            fontSize: '0.875rem',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-              {cancelMessage.type === 'success' ? 'verified' : 'error'}
-            </span>
-            <span>{cancelMessage.text}</span>
-          </div>
-        )}
-
-        {/* 5-Min Timer if still RESERVED */}
-        {isReserved && (
-          <ReservationCountdown
-            expiresAt={order.reservationExpiresAt}
-            onExpire={fetchOrder}
-          />
-        )}
-
-        {/* Order Header Card */}
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-sm)',
-          padding: '1.25rem',
-          marginBottom: '1.25rem',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingBottom: '0.875rem',
-            borderBottom: '1px solid var(--border-hairline)',
-            marginBottom: '1rem',
-          }}>
-            <div>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                Order Identification
-              </span>
-              <h1 style={{
-                fontFamily: 'monospace',
-                fontSize: '1.25rem',
-                fontWeight: 800,
-                color: 'var(--slate-dark)',
-              }}>
-                #{order.orderId}
-              </h1>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {formatDate(order.createdAt)}
-              </span>
-            </div>
-
-            <StatusBadge status={order.status} type="order" />
-          </div>
-
-          {/* Quick Metrics */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Payment Status
-              </span>
-              <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--slate-dark)' }}>
-                {order.paymentStatus}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Total Order Value
-              </span>
-              <div style={{ fontWeight: 800, fontSize: '1.1875rem', color: 'var(--primary)' }}>
-                {formatCurrency(order.totalAmount)}
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <StatusBadge status={order.status} type="order" />
+          {canCancel && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setModalOpen(true)}
+            >
+              Cancel Order
+            </Button>
+          )}
         </div>
+      </div>
 
-        {/* ============================================================
-            REQUIREMENT 14: ORDER TIMELINE COMPONENT
-            ✓ Order Created
-            ↓
-            ✓ Stock Reserved
-            ↓
-            ✓ Payment Completed
-            ↓
-            ✓ Order Confirmed
-            ============================================================ */}
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-sm)',
-          padding: '1.25rem',
-          marginBottom: '1.25rem',
-        }}>
-          <h3 style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '0.9375rem',
-            fontWeight: 700,
-            color: 'var(--slate-dark)',
-            marginBottom: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--primary)' }}>
-              timeline
-            </span>
-            Order Progression Timeline
-          </h3>
+      {/* Stock Hold Countdown if Reserved */}
+      {isReserved && (
+        <ReservationCountdown
+          expiresAt={order.expiresAt}
+          onExpire={fetchOrder}
+        />
+      )}
 
-          {/* Vertical Timeline */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-            {timeline.map((step, idx) => {
-              const isLast = idx === timeline.length - 1;
-              const isDone = step.status === 'completed';
-              const isFailedStep = step.status === 'failed';
-              const isCurrentStep = step.status === 'current';
-
-              const color = isDone
-                ? 'var(--stock-in)'
-                : isFailedStep
-                ? 'var(--stock-out)'
-                : isCurrentStep
-                ? 'var(--primary)'
-                : 'var(--text-subtle)';
-
-              return (
-                <div key={step.title} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
-                  {/* Step Node + Vertical Line */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: isDone ? '#ecfdf5' : isFailedStep ? '#fee2e2' : isCurrentStep ? '#eff6ff' : '#f1f5f9',
-                      color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: `2px solid ${color}`,
-                      zIndex: 2,
-                    }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                        {step.icon}
-                      </span>
-                    </div>
-                    {!isLast && (
-                      <div style={{
-                        width: '2px',
-                        flex: 1,
-                        minHeight: '28px',
-                        background: isDone ? 'var(--stock-in-border)' : '#e2e8f0',
-                        margin: '2px 0',
-                      }} />
-                    )}
-                  </div>
-
-                  {/* Step Content */}
-                  <div style={{ paddingBottom: isLast ? '0' : '1.25rem', flex: 1 }}>
-                    <div style={{
-                      fontSize: '0.9375rem',
-                      fontWeight: 700,
-                      color: isDone || isCurrentStep ? 'var(--slate-dark)' : 'var(--text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                    }}>
-                      <span>{step.title}</span>
-                      {isCurrentStep && (
-                        <span style={{
-                          fontSize: '0.625rem',
-                          background: 'var(--primary-subtle)',
-                          color: 'var(--primary)',
-                          padding: '0.1rem 0.4rem',
-                          borderRadius: '4px',
-                          fontWeight: 700,
-                        }}>
-                          ACTIVE
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                      {step.desc}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section: Products Bill of Materials (BOM) */}
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-sm)',
-          padding: '1.25rem',
-          marginBottom: '1.25rem',
-        }}>
-          <h3 style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '0.9375rem',
-            fontWeight: 700,
-            color: 'var(--slate-dark)',
-            marginBottom: '0.875rem',
-          }}>
-            Purchased Products ({order.items.length})
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-            {order.items.map((item, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingBottom: '0.75rem',
-                  borderBottom: '1px solid var(--border-hairline)',
-                  fontSize: '0.875rem',
-                }}
-              >
-                <div>
-                  <strong style={{ color: 'var(--slate-dark)', display: 'block' }}>{item.name}</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                    {formatCurrency(item.price)} × {item.quantity} unit(s)
-                  </span>
-                </div>
-                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--slate-dark)' }}>
-                  {formatCurrency(item.subtotal)}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'baseline',
-            paddingTop: '0.25rem',
-          }}>
-            <strong style={{ fontSize: '1rem', color: 'var(--slate-dark)' }}>Total Settled:</strong>
-            <span style={{
-              fontFamily: 'var(--font-headline)',
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              color: 'var(--primary)',
-            }}>
-              {formatCurrency(order.totalAmount)}
-            </span>
-          </div>
-        </div>
-
-        {/* Section: Payment & Dispatch Details */}
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-hairline)',
-          boxShadow: 'var(--shadow-sm)',
-          padding: '1.25rem',
-          marginBottom: '1.5rem',
-        }}>
-          <h3 style={{
-            fontFamily: 'var(--font-headline)',
-            fontSize: '0.9375rem',
-            fontWeight: 700,
-            color: 'var(--slate-dark)',
-            marginBottom: '0.75rem',
-          }}>
-            Fulfillment & Payment Information
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', fontSize: '0.8125rem' }}>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Recipient: </span>
-              <strong style={{ color: 'var(--slate-dark)' }}>{order.customer?.fullName || 'Lead Hardware Engineer'}</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Shipping Destination: </span>
-              <strong style={{ color: 'var(--slate-dark)' }}>{order.customer?.address || 'Silicon Hub 404, Tech Park, Bangalore'}</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Stock Status: </span>
-              <strong style={{ color: order.stockReleased ? 'var(--stock-warning)' : 'var(--stock-in)' }}>
-                {order.stockReleased ? 'Released to Inventory' : 'Allocated in Warehouse'}
-              </strong>
-            </div>
-            {order.refund && (
-              <div style={{
-                marginTop: '0.5rem',
-                padding: '0.625rem 0.75rem',
-                background: '#ecfdf5',
-                borderRadius: '6px',
-                border: '1px solid #a7f3d0',
-                color: '#065f46',
-                fontWeight: 600,
-              }}>
-                Refund {order.refund.status}: {formatCurrency(order.refund.amount)} (Ref: {order.refund.refundId})
-              </div>
+      {/* Cancelled Notice */}
+      {isCancelled && (
+        <div className="bg-slate-900/80 border border-white/[0.1] rounded-2xl p-5 flex items-start gap-3">
+          <XCircle className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+          <div className="text-xs font-mono space-y-1">
+            <span className="font-bold text-white block">Order De-allocated</span>
+            <p className="text-slate-300">
+              This order was cancelled. Reserved components were released back to available inventory.
+            </p>
+            {order.cancellationReason && (
+              <p className="text-slate-400 italic">Reason: &ldquo;{order.cancellationReason}&rdquo;</p>
             )}
           </div>
         </div>
+      )}
 
-        {/* Bottom Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Column: Allocated Components */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+              <Package className="w-4 h-4 text-cyan-400" />
+              <h2 className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                Silicon Components
+              </h2>
+            </div>
+
+            <div className="divide-y divide-white/[0.04]">
+              {order.items?.map((item, idx) => (
+                <div key={idx} className="py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-12 h-12 rounded-xl object-cover bg-slate-900 border border-white/[0.06] shrink-0"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80';
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <p className="font-display font-bold text-sm text-white truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-xs font-mono text-slate-400">
+                        Qty: <span className="text-cyan-400 font-bold">{item.quantity}</span> &times; {formatCurrency(item.price)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="font-mono font-bold text-sm text-white shrink-0">
+                    {formatCurrency(item.price * item.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-white/[0.08] flex justify-between items-baseline text-base font-mono">
+              <span className="font-bold text-white">Order Total:</span>
+              <span className="font-black text-xl text-cyan-400">
+                {formatCurrency(order.totalAmount)}
+              </span>
+            </div>
+          </div>
+
+          {/* Reserved Order Prompt to Pay */}
           {isReserved && (
-            <Link
-              to={`/payment/${order.orderId}`}
-              className="btn-primary"
-              style={{ width: '100%', minHeight: '48px', fontSize: '1rem' }}
-            >
-              <span>Proceed to Payment</span>
-              <span className="material-symbols-outlined">payments</span>
-            </Link>
+            <div className="bg-gradient-to-r from-cyan-950/40 via-[#0d1527] to-purple-950/40 border border-cyan-500/40 rounded-2xl p-6 text-center space-y-4 shadow-xl">
+              <h3 className="font-display font-bold text-lg text-white">
+                Pending Payment Settlement
+              </h3>
+              <p className="text-xs font-mono text-slate-300 max-w-md mx-auto">
+                Stock reservation is active. Complete payment through the idempotency-shielded gateway before time expires.
+              </p>
+              <Link to={`/payment/${order.orderId}`}>
+                <Button variant="glow" size="lg" className="w-full font-mono text-sm font-bold">
+                  PROCEED TO PAYMENT GATEWAY &rarr;
+                </Button>
+              </Link>
+            </div>
           )}
 
-          {canCancel && (
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              className="btn-danger"
-              style={{ width: '100%', minHeight: '44px', fontSize: '0.9375rem' }}
-            >
-              <span className="material-symbols-outlined">cancel</span>
-              <span>Cancel Order</span>
-            </button>
-          )}
-
-          <Link
-            to="/orders"
-            className="btn-secondary"
-            style={{ width: '100%', minHeight: '44px', fontSize: '0.9375rem' }}
-          >
-            ← Back to All Orders
-          </Link>
         </div>
 
-        {/* Cancellation Modal */}
-        <CancelOrderModal
-          order={order}
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onConfirm={handleConfirmCancel}
-          loading={cancelling}
-        />
+        {/* Right Column: Destination & Telemetry */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Shipping Details */}
+          {order.shippingAddress && (
+            <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3">
+              <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+                <MapPin className="w-4 h-4 text-cyan-400" />
+                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                  Logistics Dispatch Point
+                </h3>
+              </div>
+              <div className="font-mono text-xs text-slate-300 space-y-1">
+                <p className="font-bold text-white">{order.shippingAddress.fullName}</p>
+                <p>{order.shippingAddress.address}</p>
+                <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
+                <p className="text-slate-400">{order.shippingAddress.email}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Transaction Metadata */}
+          <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3 font-mono text-xs">
+            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+              <Terminal className="w-4 h-4 text-cyan-400" />
+              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                Audited System Metadata
+              </h3>
+            </div>
+            <div className="flex justify-between text-slate-300">
+              <span className="text-slate-400">Database ID:</span>
+              <span className="text-slate-200 truncate max-w-[140px]">{order._id}</span>
+            </div>
+            {order.paymentId && (
+              <div className="flex justify-between text-slate-300">
+                <span className="text-slate-400">Payment Ref:</span>
+                <span className="text-purple-400 font-bold">{order.paymentId}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-slate-300">
+              <span className="text-slate-400">Status State:</span>
+              <span className="text-cyan-400 font-bold">{order.status}</span>
+            </div>
+          </div>
+
+        </div>
+
       </div>
+
+      {/* Cancel Order Modal */}
+      <CancelOrderModal
+        order={order}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={handleConfirmCancel}
+        loading={cancelling}
+      />
+
     </div>
   );
 };
