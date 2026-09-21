@@ -29,11 +29,14 @@ const checkout = async ({ cartId, customerInfo, userId }) => {
   // Fetch verified products from DB to build authoritative items array and server-computed total
   const verifiedItems = [];
   let calculatedTotal = 0;
+  const staleItemNames = [];
 
   for (const item of cart.items) {
     const product = await Product.findById(item.productId);
     if (!product) {
-      throw new ApiError(404, `Product '${item.name || item.productId}' no longer exists`);
+      // Product was deleted (e.g. after a reseed) — track it for cleanup
+      staleItemNames.push(item.name || item.productId);
+      continue;
     }
 
     const price = Number(product.price);
@@ -49,6 +52,25 @@ const checkout = async ({ cartId, customerInfo, userId }) => {
       subtotal: subtotal,
       image: product.image,
     });
+  }
+
+  // Remove stale items from the cart so the customer won't hit this again
+  if (staleItemNames.length > 0) {
+    cart.items = cart.items.filter((item) => {
+      // Keep only items that resolved successfully
+      return verifiedItems.some(
+        (vi) => vi.productId.toString() === item.productId.toString()
+      );
+    });
+    await cart.save();
+  }
+
+  // If nothing valid remains after filtering, fail with a helpful message
+  if (verifiedItems.length === 0) {
+    throw new ApiError(
+      400,
+      `Your cart contained items that are no longer available (${staleItemNames.join(', ')}). They have been removed from your cart. Please add items again and retry checkout.`
+    );
   }
 
   // 3. Atomically reserve stock in database

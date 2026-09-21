@@ -23,7 +23,7 @@ import { Badge } from '../components/ui/Badge';
 import { AnimatedNumber } from '../components/animations/AnimatedNumber';
 
 export const CartPage = () => {
-  const { cart, loading, updateQuantity, removeFromCart, resetCartAfterCheckout } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart, resetCartAfterCheckout, refreshCart } = useCart();
   const { user, isAuthenticated } = useAuth();
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
@@ -62,6 +62,8 @@ export const CartPage = () => {
       console.error('Checkout error:', err);
       const msg = err.response?.data?.message || 'Failed to initialize checkout. Check inventory availability.';
       setCheckoutError(msg);
+      // Refresh cart — the server may have auto-removed stale items
+      await refreshCart();
     } finally {
       setCheckingOut(false);
     }

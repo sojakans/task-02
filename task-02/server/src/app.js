@@ -20,6 +20,7 @@ const refundRoutes = require('./routes/refundRoutes');
 const orderController = require('./controllers/orderController');
 const { optionalAuth, requireAuth } = require('./middleware/auth');
 const Product = require('./models/Product');
+const Cart = require('./models/Cart');
 
 const app = express();
 
@@ -64,11 +65,13 @@ app.use('/api/refunds', refundRoutes);
 // Database Re-seed endpoint for testing
 app.post('/api/seed', async (req, res, next) => {
   try {
+    // Delete all products AND all active carts so no stale productId references remain
     await Product.deleteMany({});
+    await Cart.deleteMany({});
     const inserted = await Product.insertMany(sampleProducts);
     res.json({
       success: true,
-      message: `Database re-seeded with ${inserted.length} fresh products`,
+      message: `Database re-seeded with ${inserted.length} fresh products. All carts cleared.`,
     });
   } catch (err) {
     next(err);
