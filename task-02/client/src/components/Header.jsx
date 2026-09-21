@@ -7,17 +7,15 @@ import {
   ShoppingBag,
   User,
   LogOut,
-  RefreshCw,
   Menu,
   X,
   ChevronLeft,
-  Terminal,
+  Package,
   Layers,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { seedService } from '../services/api';
 import { CartPulseBadge } from './animations/FlyToCart';
 
 const CATEGORIES = ['Microcontrollers', 'Sensors', 'Displays', 'Robotics'];
@@ -27,7 +25,6 @@ export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [reseedLoading, setReseedLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,22 +37,6 @@ export const Header = () => {
       navigate('/products');
     }
     setMobileMenuOpen(false);
-  };
-
-  const handleReseed = async () => {
-    if (window.confirm('Reset and re-seed database with fresh hardware inventory?')) {
-      try {
-        setReseedLoading(true);
-        await seedService.reseed();
-        toast.success('Inventory re-seeded with factory specifications!');
-        setTimeout(() => window.location.reload(), 1200);
-      } catch (err) {
-        toast.error('Failed to reseed database: ' + err.message);
-      } finally {
-        setReseedLoading(false);
-        setMobileMenuOpen(false);
-      }
-    }
   };
 
   const pathname = location.pathname;
@@ -167,29 +148,20 @@ export const Header = () => {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Re-seed Database Action */}
-            <button
-              onClick={handleReseed}
-              disabled={reseedLoading}
-              title="Reset inventory to factory specs"
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-slate-400 hover:text-cyan-400 bg-slate-900/60 hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/30 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${reseedLoading ? 'animate-spin text-cyan-400' : ''}`} />
-              <span className="hidden xl:inline">Reset Stock</span>
-            </button>
-
-            {/* Orders History Link */}
-            <Link
-              to="/orders"
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all ${
-                pathname === '/orders'
-                  ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
-              }`}
-            >
-              <Terminal className="w-3.5 h-3.5" />
-              <span>Orders</span>
-            </Link>
+            {/* Orders History Link (Only for Authenticated Users) */}
+            {isAuthenticated && (
+              <Link
+                to="/orders"
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all ${
+                  pathname === '/orders'
+                    ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Orders</span>
+              </Link>
+            )}
 
             {/* Cart Link */}
             <Link
@@ -285,21 +257,33 @@ export const Header = () => {
             </div>
 
             <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
-              <button
-                onClick={handleReseed}
-                disabled={reseedLoading}
-                className="flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-cyan-400 px-2 py-1.5"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${reseedLoading ? 'animate-spin' : ''}`} />
-                <span>Reset Demo Stock</span>
-              </button>
-              <Link
-                to="/orders"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-xs font-mono text-cyan-400 px-2 py-1.5"
-              >
-                Order History &rarr;
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <span className="text-xs font-mono text-slate-400 px-2">
+                    Signed in as <strong className="text-slate-200">{user?.name || user?.email?.split('@')[0]}</strong>
+                  </span>
+                  <Link
+                    to="/orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-mono text-cyan-400 px-2 py-1.5 flex items-center gap-1.5"
+                  >
+                    <Package className="w-3.5 h-3.5" />
+                    <span>Order History &rarr;</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-mono text-slate-500 px-2">Customer Account</span>
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-mono text-cyan-400 px-2 py-1.5 flex items-center gap-1.5 font-bold"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Sign In &rarr;</span>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

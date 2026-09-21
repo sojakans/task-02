@@ -240,7 +240,7 @@ export const CartPage = () => {
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-[#0d1527] border border-white/[0.08] rounded-2xl p-6 shadow-2xl space-y-4">
               <h2 className="font-display font-bold text-base text-white uppercase tracking-wider border-b border-white/[0.08] pb-3">
-                Order Telemetry
+                Order Summary
               </h2>
 
               <div className="space-y-2.5 font-mono text-xs text-slate-300">

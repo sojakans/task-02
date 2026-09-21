@@ -20,7 +20,7 @@ export const BottomNav = () => {
     { label: 'Home', path: '/', icon: Home },
     { label: 'Catalog', path: '/products', icon: Grid },
     { label: 'Cart', path: '/cart', icon: ShoppingBag, badge: itemCount },
-    { label: 'Orders', path: '/orders', icon: ReceiptText },
+    ...(isAuthenticated ? [{ label: 'Orders', path: '/orders', icon: ReceiptText }] : []),
     { label: isAuthenticated ? 'Profile' : 'Sign In', path: isAuthenticated ? '/orders' : '/login', icon: User },
   ];
 

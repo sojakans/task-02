@@ -57,7 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/carts', cartRoutes);
 app.post('/api/checkout', optionalAuth, orderController.checkout);
-app.use('/api/orders', requireAuth, orderRoutes);
+app.use('/api/orders', optionalAuth, orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/refunds', refundRoutes);
 

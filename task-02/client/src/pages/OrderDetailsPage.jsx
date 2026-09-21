@@ -77,7 +77,7 @@ export const OrderDetailsPage = () => {
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-spin mb-4">
           <Cpu className="w-6 h-6" />
         </div>
-        <p className="text-xs font-mono text-slate-400">Loading order telemetry ledger...</p>
+        <p className="text-xs font-mono text-slate-400">Loading order details...</p>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export const OrderDetailsPage = () => {
             className="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:text-cyan-300 mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Orders Ledger</span>
+            <span>Back to My Orders</span>
           </Link>
           <div className="flex items-center gap-3">
             <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -143,7 +143,7 @@ export const OrderDetailsPage = () => {
       {/* Stock Hold Countdown if Reserved */}
       {isReserved && (
         <ReservationCountdown
-          expiresAt={order.expiresAt}
+          expiresAt={order.reservationExpiresAt || order.expiresAt}
           onExpire={fetchOrder}
         />
       )}
@@ -237,22 +237,25 @@ export const OrderDetailsPage = () => {
         <div className="lg:col-span-5 space-y-6">
           
           {/* Shipping Details */}
-          {order.shippingAddress && (
-            <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3">
-              <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
-                <MapPin className="w-4 h-4 text-cyan-400" />
-                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
-                  Logistics Dispatch Point
-                </h3>
+          {(order.customer || order.shippingAddress) && (() => {
+            const addr = order.customer || order.shippingAddress;
+            return (
+              <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3">
+                <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+                  <MapPin className="w-4 h-4 text-cyan-400" />
+                  <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                    Delivery Address
+                  </h3>
+                </div>
+                <div className="font-mono text-xs text-slate-300 space-y-1">
+                  <p className="font-bold text-white">{addr.fullName}</p>
+                  <p>{addr.address}</p>
+                  <p>{addr.city}{addr.postalCode ? `, ${addr.postalCode}` : ''}</p>
+                  <p className="text-slate-400">{addr.email}</p>
+                </div>
               </div>
-              <div className="font-mono text-xs text-slate-300 space-y-1">
-                <p className="font-bold text-white">{order.shippingAddress.fullName}</p>
-                <p>{order.shippingAddress.address}</p>
-                <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
-                <p className="text-slate-400">{order.shippingAddress.email}</p>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Transaction Metadata */}
           <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3 font-mono text-xs">

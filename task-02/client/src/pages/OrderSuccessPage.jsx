@@ -8,6 +8,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Cpu,
+  ReceiptText,
+  ArrowRight,
 } from 'lucide-react';
 import { orderService } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -47,7 +49,7 @@ export const OrderSuccessPage = () => {
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-spin mb-4">
           <Cpu className="w-6 h-6" />
         </div>
-        <p className="text-xs font-mono text-slate-400">Verifying cryptographic dispatch confirmation...</p>
+        <p className="text-xs font-mono text-slate-400">Confirming order details...</p>
       </div>
     );
   }
@@ -102,7 +104,7 @@ export const OrderSuccessPage = () => {
             Order Dispatched to Warehouse
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 font-mono max-w-md mx-auto">
-            Your payment was cryptographically authorized. Hardware inventory is officially locked and scheduled for logistics routing.
+            Your payment was processed successfully. Inventory is confirmed and your items are being prepared for dispatch.
           </p>
         </div>
 
@@ -139,7 +141,7 @@ export const OrderSuccessPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <Link to={`/orders/${order.orderId}`}>
             <Button
               variant="primary"
@@ -147,7 +149,17 @@ export const OrderSuccessPage = () => {
               className="w-full font-mono text-xs font-bold"
               iconRight={<ExternalLink className="w-3.5 h-3.5" />}
             >
-              ORDER TELEMETRY
+              VIEW ORDER
+            </Button>
+          </Link>
+          <Link to="/orders">
+            <Button
+              variant="secondary"
+              size="md"
+              className="w-full font-mono text-xs"
+              iconLeft={<ReceiptText className="w-3.5 h-3.5" />}
+            >
+              MY ORDERS
             </Button>
           </Link>
           <Link to="/products">
@@ -157,7 +169,7 @@ export const OrderSuccessPage = () => {
               className="w-full font-mono text-xs"
               iconLeft={<ShoppingBag className="w-3.5 h-3.5" />}
             >
-              CONTINUE SHOPPING
+              SHOP MORE
             </Button>
           </Link>
         </div>

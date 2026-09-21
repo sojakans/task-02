@@ -70,7 +70,7 @@ export const CheckoutPage = () => {
           <AlertOctagon className="w-12 h-12 text-rose-400 mx-auto" />
           <h2 className="font-display font-bold text-xl text-white">Invalid Order Reference</h2>
           <p className="text-xs font-mono text-slate-400">
-            {error || 'Unable to locate order telemetry.'}
+            {error || 'Unable to locate order details.'}
           </p>
           <Link to="/products">
             <Button variant="primary" size="md">
@@ -201,22 +201,25 @@ export const CheckoutPage = () => {
         </div>
 
         {/* Fulfillment Destination Card */}
-        {order.shippingAddress && (
-          <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3">
-            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
-              <MapPin className="w-4 h-4 text-cyan-400" />
-              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
-                Fulfillment Logistics Terminal
-              </h3>
+        {(order.customer || order.shippingAddress) && (() => {
+          const addr = order.customer || order.shippingAddress;
+          return (
+            <div className="bg-[#0b1222] border border-white/[0.08] rounded-2xl p-6 space-y-3">
+              <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+                <MapPin className="w-4 h-4 text-cyan-400" />
+                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">
+                  Delivery Address
+                </h3>
+              </div>
+              <div className="font-mono text-xs text-slate-300 space-y-1">
+                <p className="font-bold text-white">{addr.fullName}</p>
+                <p>{addr.address}</p>
+                <p>{addr.city}{addr.postalCode ? `, ${addr.postalCode}` : ''}</p>
+                <p className="text-slate-400">{addr.email}</p>
+              </div>
             </div>
-            <div className="font-mono text-xs text-slate-300 space-y-1">
-              <p className="font-bold text-white">{order.shippingAddress.fullName}</p>
-              <p>{order.shippingAddress.address}</p>
-              <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
-              <p className="text-slate-400">{order.shippingAddress.email}</p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Action Button */}
         <div className="pt-4 space-y-3">

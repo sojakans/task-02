@@ -39,6 +39,9 @@ const checkout = async (req, res, next) => {
  */
 const getOrders = async (req, res, next) => {
   try {
+    if (!req.user) {
+      throw new ApiError(401, 'Please log in to view your order history.');
+    }
     const query = { $or: [{ userId: req.user._id }, { 'customer.email': req.user.email }] };
     const orders = await Order.find(query).sort({ createdAt: -1 });
 
